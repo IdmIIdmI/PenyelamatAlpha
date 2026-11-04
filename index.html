@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Penyelamat Alpha 🐱</title>
+<style>
+*{box-sizing:border-box; margin:0; padding:0; font-family:Arial, sans-serif;}
+html,body{height:100%; overflow:hidden;}
+body{touch-action:none;}
+
+/* SKRIN UMUM */
+.screen{position:absolute; inset:0; display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; z-index:10;}
+.screen.active{display:flex;}
+
+/* BUTANG */
+.btn{background:linear-gradient(135deg, #2e7d32, #4caf50); color:white; border:none; padding:14px 30px; font-size:18px; font-weight:bold; border-radius:12px; cursor:pointer; margin:8px; box-shadow:0 4px 8px rgba(0,0,0,0.2); transition:transform 0.2s;}
+.btn:hover{transform:scale(1.05);}
+.btn-gold{background:linear-gradient(135deg, #f57c00, #ffc107); color:#5d4037;}
+.btn-lg{font-size:22px; padding:18px 40px;}
+.btn:disabled{opacity:0.5; cursor:not-allowed; transform:none;}
+.btn-sm{padding:8px 16px; font-size:15px;}
+.btn-back{background:#78909c;}
+
+/* TEKS */
+h1{font-size:clamp(26px,6vw,42px); color:#2e7d32; text-shadow:2px 2px 4px rgba(0,0,0,0.1); margin-bottom:10px; text-align:center;}
+h2{font-size:clamp(20px,5vw,26px); color:#4a2500; margin-bottom:15px; text-align:center;}
+p{font-size:17px; line-height:1.6; color:#333; text-align:center; max-width:500px;}
+
+/* SKRIN MULA */
+#start-screen{background:linear-gradient(180deg, #e8f5e9, #c8e6c9);}
+.start-logo{font-size:80px; margin-bottom:20px;}
+.start-box{background:white; border-radius:24px; padding:30px; max-width:400px; width:100%; text-align:center; box-shadow:0 8px 32px rgba(0,0,0,0.1); border:3px solid #81c784;}
+
+/* PETA POKOK */
+#tree-screen{background:linear-gradient(180deg, #87CEEB 0%, #b2ffb2 60%, #6d4c41 100%); overflow:hidden;}
+.tree-wrapper{position:relative; width:100%; height:100%; min-height:550px;}
+.tree-trunk{position:absolute; bottom:0; left:50%; transform:translateX(-50%); width:90px; height:45%; background:linear-gradient(90deg, #5d4037, #795548, #5d4037); border-radius:8px; z-index:1;}
+.tree-crown{position:absolute; bottom:40%; left:50%; transform:translateX(-50%); width:320px; height:380px; background:radial-gradient(ellipse, #4caf50 0%, #2e7d32 70%, #1b5e20 100%); border-radius:50%; z-index:2;}
+
+/* BUAH & BUNGA */
+.deco{position:absolute; z-index:3; font-size:22px; pointer-events:none;}
+
+/* LALUAN NOMBOR */
+.path-node{position:absolute; width:48px; height:48px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:17px; cursor:pointer; transition:all 0.3s; z-index:5; border:3px solid transparent;}
+.path-node.locked{background:#9e9e9e; color:#666; cursor:not-allowed; opacity:0.55;}
+.path-node.unlocked{background:linear-gradient(135deg, #ffd700, #ffeb3b); color:#5d4037; border-color:#e65100; box-shadow:0 0 14px rgba(255,215,0,0.5);}
+.path-node.completed{background:linear-gradient(135deg, #66bb6a, #43a047); color:white; border-color:#2e7d32;}
+.path-node.current{animation:pulse 1s infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(76,175,80,0.6);} 70%{box-shadow:0 0 0 14px rgba(76,175,80,0);} 100%{box-shadow:0 0 0 0 rgba(76,175,80,0);}}
+
+/* ANAK KUCING */
+.kitten{position:absolute; top:6%; left:50%; transform:translateX(-50%); font-size:42px; z-index:6; animation:kittenBlink 2.5s infinite alternate;}
+@keyframes kittenBlink{0%{transform:translateX(-50%) translateY(0);} 100%{transform:translateX(-50%) translateY(-6px);}}
+
+/* WATAK ALPHA */
+.alpha{position:absolute; width:44px; height:60px; z-index:7; transition:left 0.9s ease, top 0.9s ease;}
+.alpha-part{position:absolute;}
+.alpha-head{width:28px; height:28px; background:#ffdab9; border-radius:50%; top:0; left:8px; border:2px solid #e0c9b0;}
+.alpha-eyes{top:9px; left:0; width:100%; display:flex; justify-around:space-around; padding:0 5px;}
+.alpha-eye{width:4px; height:5px; background:#222; border-radius:50%;}
+.alpha-smile{top:17px; left:11px; width:10px; height:5px; border-bottom:2px solid #b8860b; border-radius:0 0 10px 10px;}
+.alpha-hat{width:24px; height:9px; background:#1565c0; border-radius:50% 50% 0 0; top:-4px; left:10px;}
+.alpha-torso{width:26px; height:24px; background:#ffffff; border-radius:4px; top:26px; left:9px; border:1px solid #ddd;}
+.alpha-collar{width:11px; height:7px; background:#1565c0; clip-path:polygon(50% 100%, 0 0, 100% 0); top:26px; left:16px;}
+.alpha-legs{display:flex; justify-content:space-between; width:18px; bottom:0; left:13px;}
+.alpha-leg{width:5px; height:13px; background:#1565c0; border-radius:2px; transform-origin:top center;}
+.alpha.walking .alpha-leg:first-child{animation:walkL 0.35s infinite alternate;}
+.alpha.walking .alpha-leg:last-child{animation:walkR 0.35s infinite alternate;}
+@keyframes walkL{0%{transform:rotate(-18deg);} 100%{transform:rotate(18deg);}}
+@keyframes walkR{0%{transform:rotate(18deg);} 100%{transform:rotate(-18deg);}}
+
+/* JOYSTIK LUTSINAR */
+#joystick-wrap{position:fixed; bottom:25px; left:25px; width:130px; height:130px; z-index:100; pointer-events:none;}
+.joystick-base{width:100%; height:100%; background:rgba(255,255,255,0.15); border:2px solid rgba(255,255,255,0.3); border-radius:50%; backdrop-filter:blur(4px); pointer-events:auto; position:relative;}
+.joystick-handle{position:absolute; width:56px; height:56px; background:rgba(255,255,255,0.4); border:2px solid rgba(255,255,255,0.6); border-radius:50%; left:50%; top:50%; transform:translate(-50%,-50%); pointer-events:none; transition:transform 0.1s;}
+
+/* SKRIN MISI */
+#mission-screen{background:linear-gradient(180deg, #fff8e1, #fffde7); padding:20px; overflow-y:auto;}
+.mission-card{background:white; border-radius:20px; padding:25px; max-width:440px; width:100%; box-shadow:0 6px 20px rgba(0,0,0,0.12); border:3px solid #ffc107; margin-bottom:20px;}
+.mission-title{font-size:22px; font-weight:bold; color:#e65100; margin-bottom:15px; text-align:center;}
+.instruction{font-size:16px; color:#5d4037; margin-bottom:15px; text-align:center;}
+.task-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(90px, 1fr)); gap:10px; margin:15px 0;}
+.task-item{padding:12px 8px; background:#fafafa; border:2px solid #ddd; border-radius:10px; text-align:center; cursor:pointer; transition:all 0.2s; font-size:15px;}
+.task-item:hover{border-color:#66bb6a; background:#f1f8e9;}
+.task-item.selected{border-color:#ff9800; background:#fff3e0;}
+.task-item.correct{border-color:#4caf50; background:#c8f7c9;}
+.task-item.wrong{border-color:#e53935; background:#ffebee;}
+.sort-area{display:flex; flex-direction:column; gap:8px; margin:15px 0; min-height:100px; padding:15px; background:#f1f8e9; border-radius:10px;}
+.sort-box{padding:10px 14px; background:white; border:2px solid #81c784; border-radius:8px; cursor:pointer; font-size:14px; text-align:center; transition:all 0.2s;}
+.sort-box:hover{border-color:#ff9800;}
+.sort-box.placed{border-color:#4caf50; background:#c8f7c9; cursor:default;}
+
+/* ZIKIR */
+.dhikr-box{background:#e3f2fd; border-radius:12px; padding:20px; text-align:center; margin-top:20px;}
+.dhikr-label{font-size:16px; color:#1565c0; margin-bottom:8px;}
+.dhikr-name{font-size:26px; font-weight:bold; color:#0d47a1; margin-bottom:10px;}
+.dhikr-counter{font-size:48px; font-weight:bold; color:#2e7d32; margin:10px 0;}
+.dhikr-hint{font-size:13px; color:#666; margin-top:8px;}
+
+/* HADIAH & HUJAN */
+#reward-screen{background:rgba(0,50,0,0.92); text-align:center;}
+.reward-icon{font-size:90px; margin-bottom:20px;}
+.reward-text{font-size:26px; color:#ffd700; font-weight:bold; margin-bottom:10px;}
+.reward-desc{font-size:18px; color:#fff9c4; margin-bottom:30px; max-width:400px;}
+.rain-container{position:absolute; inset:0; overflow:hidden; pointer-events:none;}
+.rain-item{position:absolute; font-size:26px; animation:fallDown 3s linear forwards;}
+@keyframes fallDown{0%{transform:translateY(-50px) rotate(0deg); opacity:1;} 100%{transform:translateY(200vh) rotate(360deg); opacity:0;}}
+
+/* TAMAT PERMAINAN */
+#end-screen{background:linear-gradient(180deg, #fff9c4, #fff176); text-align:center;}
+.end-icon{font-size:80px; margin-bottom:20px;}
+.end-title{font-size:30px; color:#2e7d32; font-weight:bold; margin-bottom:20px;}
+.end-prayer{font-size:18px; line-height:1.8; color:#4a2500; max-width:420px; margin-bottom:30px; background:white; padding:25px; border-radius:16px; box-shadow:0 4px 16px rgba(0,0,0,0.1);}
+
+.status-bar{position:fixed; top:10px; left:50%; transform:translateX(-50%); background:rgba(0,0,0,0.65); color:white; padding:8px 20px; border-radius:20px; font-size:14px; z-index:200;}
+.hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<!-- SKRIN 1: MULA -->
+<div id="start-screen" class="screen active">
+  <div class="start-logo">🌳🐱</div>
+  <h1>PENYELAMAT ALPHA</h1>
+  <p>Bantu Budak Kecil Naik Pokok<br>Selamatkan Anak Kucing di Puncak!</p>
+  <button class="btn btn-lg" onclick="startGame()">🎮 MULA PERMAINAN</button>
+  <p style="font-size:13px; color:#888; margin-top:15px;">Guna joystick di bawah kiri untuk berjalan</p>
+</div>
+
+<!-- SKRIN 2: PETA POKOK -->
+<div id="tree-screen" class="screen">
+  <div class="tree-wrapper">
+    <div class="deco" style="top:38%; left:32%;">🍎</div>
+    <div class="deco" style="top:34%; left:65%;">🥭</div>
+    <div class="deco" style="top:45%; left:25%;">🍌</div>
+    <div class="deco" style="top:30%; left:58%;">🍇</div>
+    <div class="deco" style="top:50%; left:70%;">🌸</div>
+    <div class="deco" style="top:42%; left:28%;">🌺</div>
+    <div class="deco" style="top:55%; left:60%;">🌻</div>
+    <div class="deco" style="top:26%; left:42%;">🍊</div>
+    <div class="deco" style="top:52%; left:35%;">🍓</div>
+    <div class="deco" style="top:40%; left:52%;">🌷</div>
+    <div class="tree-crown"></div>
+    <div class="tree-trunk"></div>
+    <div class="kitten" id="kitten">🐱</div>
+    <div id="path-nodes"></div>
+    <div class="alpha" id="alpha">
+      <div class="alpha-head alpha-part"></div>
+      <div class="alpha-eyes alpha-part"><div class="alpha-eye"></div><div class="alpha-eye"></div></div>
+      <div class="alpha-smile alpha-part"></div>
+      <div class="alpha-hat alpha-part"></div>
+      <div class="alpha-torso alpha-part"></div>
+      <div class="alpha-collar alpha-part"></div>
+      <div class="alpha-legs alpha-part"><div class="alpha-leg"></div><div class="alpha-leg"></div></div>
+    </div>
+  </div>
+  <div id="joystick-wrap">
+    <div class="joystick-base" id="joystick-base">
+      <div class="joystick-handle" id="joystick-handle"></div>
+    </div>
+  </div>
+  <div class="status-bar" id="tree-status">Tekan nombor misi untuk bermula</div>
+</div>
+
+<!-- SKRIN 3: MISI -->
+<div id="mission-screen" class="screen">
+  <div class="mission-card">
+    <div class="mission-title" id="mission-title">Misi 1</div>
+    <div class="instruction" id="mission-instruction">Baca arahan di sini</div>
+    <div id="task-area"></div>
+    <div class="dhikr-box">
+      <div class="dhikr-label">Ucapkan zikir ini 5 kali:</div>
+      <div class="dhikr-name" id="dhikr-name">Alhamdulillah</div>
+      <div class="dhikr-counter"><span id="dhikr-num">0</span> / 5</div>
+      <button class="btn btn-sm" id="dhikr-btn" onclick="countDhikr()">🙏 Saya sudah sebut</button>
+      <div class="dhikr-hint">Tekan butang setiap kali selesai menyebut</div>
+    </div>
+    <button class="btn" id="done-btn" onclick="checkMission()" style="margin-top:20px; width:100%;" disabled>✅ Semua Siap!</button>
+    <button class="btn btn-sm btn-back" style="margin-top:10px;" onclick="backToTree()">⬅️ Kembali ke Peta</button>
+  </div>
+</div>
+
+<!-- SKRIN 4: HADIAH -->
+<div id="reward-screen" class="screen">
+  <div class="rain-container" id="rain-container"></div>
+  <div class="reward-icon" id="reward-icon">💎</div>
+  <div class="reward-text" id="reward-title">TAHNIAH!</div>
+  <div class="reward-desc" id="reward-desc">Anda telah menyelesaikan misi dengan jaya!</div>
+  <button class="btn btn-lg btn-gold" id="reward-continue" onclick="nextMission()">TERUSKAN 🚀</button>
+</div>
+
+<!-- SKRIN 5: TAMAT -->
+<div id="end-screen" class="screen">
+  <div class="end-icon">🎉🐱</div>
+  <div class="end-title">ANDA BERJAYA!</div>
+  <div class="end-prayer">
+    <strong>Doa Penutup:</strong><br><br>
+    "Alhamdulillah! Anak kucing selamat diselamatkan! Semoga Allah memberkati usaha kamu, melindungimu di mana sahaja kamu berada, dan menjadikan kamu anak yang soleh, beriman, dan berguna kepada agama serta negara. Amin." 🤲✨
+  </div>
+  <button class="btn" onclick="restartGame()">🔄 MAIN SEMULA</button>
+</div>
+
+<script>
+// ==================================================
+// DATA PERMAINAN — 20 MISI LENGKAP
+// ==================================================
+const MISSIONS = [
+  {
+    id: 1,
+    title: "Misi 1 — Makanan Halal",
+    instruction: "Pilih 5 jenis makanan yang HALAL.",
+    type: "select5",
+    options: [
+      {text: "🍚 Nasi", correct: true},
+      {text: "🍞 Roti", correct: true},
+      {text: "🥩 Daging", correct: true},
+      {text: "🍎 Epal", correct: true},
+      {text: "🐷 Daging Babi", correct: false},
+      {text: "🍯 Madu", correct: true},
+      {text: "🍷 Arak", correct: false},
+      {text: "🥤 Air", correct: true}
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Cincin Emas 💍",
+    rewardIcon: "💍"
+  },
+  {
+    id: 2,
+    title: "Misi 2 — Barangan Sunnah",
+    instruction: "Pilih 5 barangan sunnah.",
+    type: "select5",
+    options: [
+      {text: "🧻 Miswak", correct: true},
+      {text: "🧢 Songkok/Serban", correct: true},
+      {text: "💧 Bekas Air Minum", correct: true},
+      {text: "🦷 Sikat Gigi", correct: true},
+      {text: "👔 Pakaian Ketat", correct: false},
+      {text: "🚬 Rokok", correct: false},
+      {text: "📖 Buku", correct: true},
+      {text: "🛁 Bersih Diri", correct: true}
+    ],
+    dhikr: "Subhanallah",
+    reward: "Cincin Perak ⭕",
+    rewardIcon: "⭕"
+  },
+  {
+    id: 3,
+    title: "Misi 3 — Surah Al-Fatihah",
+    instruction: "Susun ayat mengikut urutan betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Segala puji bagi Allah, Tuhan semesta alam.",
+      "2. Maha Pemurah lagi Maha Penyayang.",
+      "3. Yang Menguasai Hari Pembalasan.",
+      "4. Hanya kepada Engkaulah kami menyembah.",
+      "5. Hanya kepada Engkaulah kami memohon pertolongan.",
+      "6. Tunjukilah kami jalan yang lurus.",
+      "7. Jalan orang-orang yang telah Engkau beri nikmat."
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Kitab Hikmah 📖",
+    rewardIcon: "📖"
+  },
+  {
+    id: 4,
+    title: "Misi 4 — Pakaian Menutup Aurat",
+    instruction: "Pilih 5 cara berpakaian yang TIDAK menutup aurat dengan betul.",
+    type: "select5",
+    options: [
+      {text: "👗 Pakaian labuh & sopan", correct: false},
+      {text: "👙 Pakaian ketat", correct: true},
+      {text: "🧥 Menutup dada & pinggang", correct: false},
+      {text: "👕 Pakaian terlalu singkat", correct: true},
+      {text: "🧕 Menutup rambut & leher", correct: false},
+      {text: "👔 Pakaian lut sinar", correct: true},
+      {text: "👖 Seluar labuh", correct: false},
+      {text: "💃 Menampakkan bentuk badan", correct: true},
+      {text: "🧣 Menutup bahu", correct: false},
+      {text: "👗 Pakaian terbuka", correct: true}
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Bunga Syurga 🌸",
+    rewardIcon: "🌸"
+  },
+  {
+    id: 5,
+    title: "Misi 5 — Niat Solat Subuh",
+    instruction: "Susun urutan niat & langkah solat fardu Subuh yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Niatku solat fardu Subuh, dua rakaat, menghadap kiblat, kerana Allah Taala.",
+      "2. Membaca: Allahu Akbar.",
+      "3. Membaca Surah Al-Fatihah & ayat pendek.",
+      "4. Rukuk dengan tenang, bangun, sujud dua kali.",
+      "5. Duduk Tahiyat, beri salam kanan & kiri."
+    ],
+    dhikr: "Subhanallah",
+    reward: "Bintang Kejayaan ⭐",
+    rewardIcon: "⭐"
+  },
+  {
+    id: 6,
+    title: "Misi 6 — Niat Solat Zohor",
+    instruction: "Susun urutan niat & langkah solat fardu Zohor yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Niatku solat fardu Zohor, empat rakaat, menghadap kiblat, kerana Allah Taala.",
+      "2. Membaca: Allahu Akbar.",
+      "3. Rakaat 1 & 2: Al-Fatihah + surah pendek.",
+      "4. Rakaat 3 & 4: Al-Fatihah sahaja.",
+      "5. Duduk Tahiyat, beri salam kanan & kiri."
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Pelangi Harapan 🌈",
+    rewardIcon: "🌈"
+  },
+  {
+    id: 7,
+    title: "Misi 7 — Niat Solat Maghrib",
+    instruction: "Susun urutan niat & langkah solat fardu Maghrib yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Niatku solat fardu Maghrib, tiga rakaat, menghadap kiblat, kerana Allah Taala.",
+      "2. Membaca: Allahu Akbar.",
+      "3. Rakaat 1 & 2: Al-Fatihah + surah pendek.",
+      "4. Rakaat 3: Al-Fatihah sahaja.",
+      "5. Duduk Tahiyat, beri salam kanan & kiri."
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Lampu Hidayah 💡",
+    rewardIcon: "💡"
+  },
+  {
+    id: 8,
+    title: "Misi 8 — Niat Solat Asar",
+    instruction: "Susun urutan niat & langkah solat fardu Asar yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Niatku solat fardu Asar, empat rakaat, menghadap kiblat, kerana Allah Taala.",
+      "2. Membaca: Allahu Akbar.",
+      "3. Rakaat 1 & 2: Al-Fatihah + surah pendek.",
+      "4. Rakaat 3 & 4: Al-Fatihah sahaja.",
+      "5. Duduk Tahiyat, beri salam kanan & kiri."
+    ],
+    dhikr: "Subhanallah",
+    reward: "Permata Iman 💎",
+    rewardIcon: "💎"
+  },
+  {
+    id: 9,
+    title: "Misi 9 — Niat Solat Isyak",
+    instruction: "Susun urutan niat & langkah solat fardu Isyak yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Niatku solat fardu Isyak, empat rakaat, menghadap kiblat, kerana Allah Taala.",
+      "2. Membaca: Allahu Akbar.",
+      "3. Rakaat 1 & 2: Al-Fatihah + surah pendek.",
+      "4. Rakaat 3 & 4: Al-Fatihah sahaja.",
+      "5. Duduk Tahiyat, beri salam kanan & kiri."
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Bulan Purnama 🌙",
+    rewardIcon: "🌙"
+  },
+  {
+    id: 10,
+    title: "Misi 10 — Rukun Islam",
+    instruction: "Pilih 5 RUKUN ISLAM yang betul.",
+    type: "select5",
+    options: [
+      {text: "🕌 Mengucap dua kalimah Syahadah", correct: true},
+      {text: "🙅 Berbohong", correct: false},
+      {text: "🤲 Mendirikan solat", correct: true},
+      {text: "💰 Membayar zakat", correct: true},
+      {text: "🍔 Berpuasa bulan Ramadan", correct: true},
+      {text: "🎮 Bermain permainan", correct: false},
+      {text: "🏀 Bersukan", correct: false},
+      {text: "🕋 Menunaikan haji", correct: true}
+    ],
+    dhikr: "Subhanallah",
+    reward: "Mahkota Kebajikan 👑",
+    rewardIcon: "👑"
+  },
+  {
+    id: 11,
+    title: "Misi 11 — Rukun Iman",
+    instruction: "Pilih 6 RUKUN IMAN yang betul.",
+    type: "select6",
+    options: [
+      {text: "☝️ Beriman kepada Allah", correct: true},
+      {text: "📖 Beriman kepada Malaikat", correct: true},
+      {text: "📚 Beriman kepada Kitab-kitab Allah", correct: true},
+      {text: "👳 Beriman kepada Rasul-rasul Allah", correct: true},
+      {text: "📅 Beriman kepada Hari Akhirat", correct: true},
+      {text: "🎲 Beriman kepada Qada & Qadar", correct: true},
+      {text: "😴 Beriman kepada Hantu", correct: false},
+      {text: "💵 Beriman kepada Duit", correct: false}
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Perisai Iman 🛡️",
+    rewardIcon: "🛡️"
+  },
+  {
+    id: 12,
+    title: "Misi 12 — Cara Berwuduk",
+    instruction: "Susun urutan cara berwuduk yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Baca Bismillah.",
+      "2. Basuh kedua-dua tapak tangan.",
+      "3. Berkumur-kumur.",
+      "4. Menghirup air ke dalam hidung lalu dikeluarkan.",
+      "5. Basuh muka tiga kali.",
+      "6. Basuh tangan hingga siku tiga kali.",
+      "7. Sapu sebahagian kepala.",
+      "8. Basuh kaki hingga buku lali tiga kali."
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Air Syurga 💧",
+    rewardIcon: "💧"
+  },
+  {
+    id: 13,
+    title: "Misi 13 — Adab Makan",
+    instruction: "Pilih 5 adab makan yang betul.",
+    type: "select5",
+    options: [
+      {text: "🤲 Baca Bismillah", correct: true},
+      {text: "👆 Makan dengan tangan kanan", correct: true},
+      {text: "📱 Main telefon masa makan", correct: false},
+      {text: "😋 Makan makanan yang halal & baik", correct: true},
+      {text: "🗣️ Bercakap masa mengunyah", correct: false},
+      {text: "🍽️ Jangan membazir makanan", correct: true},
+      {text: "🧤 Cuci tangan sebelum makan", correct: true},
+      {text: "😤 Makan dengan marah", correct: false}
+    ],
+    dhikr: "Subhanallah",
+    reward: "Buah Syurga 🍇",
+    rewardIcon: "🍇"
+  },
+  {
+    id: 14,
+    title: "Misi 14 — Nama-nama Allah",
+    instruction: "Pilih 5 nama ALLAH yang betul (Asmaul Husna).",
+    type: "select5",
+    options: [
+      {text: "🤲 Ar-Rahman", correct: true},
+      {text: "🤲 Ar-Rahim", correct: true},
+      {text: "😠 Al-Ghadab", correct: false},
+      {text: "🤲 Al-Malik", correct: true},
+      {text: "🤲 Al-Quddus", correct: true},
+      {text: "💰 Al-Mal", correct: false},
+      {text: "🤲 As-Salam", correct: true},
+      {text: "👻 Al-Jin", correct: false}
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Lilin Hikmah 🕯️",
+    rewardIcon: "🕯️"
+  },
+  {
+    id: 15,
+    title: "Misi 15 — Nabi & Rasul",
+    instruction: "Pilih 5 nama Nabi yang betul.",
+    type: "select5",
+    options: [
+      {text: "🕌 Nabi Muhammad ﷺ", correct: true},
+      {text: "🌳 Nabi Adam a.s.", correct: true},
+      {text: "🐟 Nabi Nuh a.s.", correct: true},
+      {text: "🦁 Nabi Harimau", correct: false},
+      {text: "🧱 Nabi Ibrahim a.s.", correct: true},
+      {text: "🐠 Nabi Ikan", correct: false},
+      {text: "🏔️ Nabi Musa a.s.", correct: true},
+      {text: "🦖 Nabi Dinosaur", correct: false}
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Cahaya Kenabian ✨",
+    rewardIcon: "✨"
+  },
+  {
+    id: 16,
+    title: "Misi 16 — Bulan-bulan Islam",
+    instruction: "Susun urutan bulan-bulan Islam yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Muharram",
+      "2. Safar",
+      "3. Rabiulawal",
+      "4. Rabiulakhir",
+      "5. Jamadilawal",
+      "6. Jamadilakhir",
+      "7. Rejab",
+      "8. Syaaban",
+      "9. Ramadan",
+      "10. Syawal",
+      "11. Zulkaedah",
+      "12. Zulhijjah"
+    ],
+    dhikr: "Subhanallah",
+    reward: "Kalendar Iman 📅",
+    rewardIcon: "📅"
+  },
+  {
+    id: 17,
+    title: "Misi 17 — Kata-kata Sopan",
+    instruction: "Pilih 5 perkataan yang sopan.",
+    type: "select5",
+    options: [
+      {text: "🙏 Terima kasih", correct: true},
+      {text: "🙏 Maafkan saya", correct: true},
+      {text: "🙏 Boleh saya bantu?", correct: true},
+      {text: "😤 Pergi jauh!", correct: false},
+      {text: "🙏 Sila", correct: true},
+      {text: "😤 Tak peduli!", correct: false},
+      {text: "🙏 Assalamualaikum", correct: true},
+      {text: "😤 Bodoh!", correct: false}
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Mutiara Lidah 🦪",
+    rewardIcon: "🦪"
+  },
+  {
+    id: 18,
+    title: "Misi 18 — Menjaga Alam",
+    instruction: "Pilih 5 cara menjaga alam sekitar yang betul.",
+    type: "select5",
+    options: [
+      {text: "🗑️ Buang sampah di tong", correct: true},
+      {text: "🌲 Tanam pokok", correct: true},
+      {text: "💧 Jangan bazir air", correct: true},
+      {text: "🔥 Bakar sampah merata", correct: false},
+      {text: "🌸 Jaga kebersihan taman", correct: true},
+      {text: "📱 Buang plastik ke sungai", correct: false},
+      {text: "🐱 Sayangkan haiwan", correct: true},
+      {text: "🌿 Patahkan dahan pokok", correct: false}
+    ],
+    dhikr: "Alhamdulillah",
+    reward: "Dunia Hijau 🌍",
+    rewardIcon: "🌍"
+  },
+  {
+    id: 19,
+    title: "Misi 19 — Waktu Solat",
+    instruction: "Susun urutan waktu solat sehari semalam yang betul.",
+    type: "sort",
+    correctOrder: [
+      "1. Subuh — terbit fajar hingga terbit matahari.",
+      "2. Zohor — tergelincir matahari hingga masuk waktu Asar.",
+      "3. Asar — tamat waktu Zohor hingga terbenam matahari.",
+      "4. Maghrib — terbenam matahari hingga hilang awan merah.",
+      "5. Isyak — tamat waktu Maghrib hingga terbit fajar."
+    ],
+    dhikr: "Subhanallah",
+    reward: "Pelita Solat 🪔",
+    rewardIcon: "🪔"
+  },
+  {
+    id: 20,
+    title: "Misi 20 — Sayang Ibu Bapa",
+    instruction: "Pilih 5 cara menghormati ibu bapa.",
+    type: "select5",
+    options: [
+      {text: "💚 Cium tangan mereka", correct: true},
+      {text: "💚 Bercakap dengan lembut", correct: true},
+      {text: "💚 Bantu buat kerja rumah", correct: true},
+      {text: "😤 Jawab bila ditegur", correct: false},
+      {text: "💚 Doakan mereka selalu", correct: true},
+      {text: "😤 Tinggikan suara", correct: false},
+      {text: "💚 Dengar cakap mereka", correct: true},
+      {text: "😤 Lari dari rumah", correct: false}
+    ],
+    dhikr: "Allahu Akbar",
+    reward: "Kasih Sayang Abadi ❤️",
+    rewardIcon: "❤️"
+  }
+];
+
+// ==================================================
+// FUNGSI PERMAINAN
+// ==================================================
+let currentMission = 1;
+let completedMissions = JSON.parse(localStorage.getItem('alphaCompleted') || '[]');
+let selectedItems = [];
+let sortOrder = [];
+let dhikrCount = 0;
+let joystickActive = false;
+let joystickCenter = {x:0, y:0};
+let alphaPos = {x:50, y:75};
+
+// Kedudukan nombor misi di atas pokok
+const nodePositions = [
+  {x:50, y:72}, {x:30, y:65}, {x:70, y:65}, {x:20, y:55}, {x:80, y:55},
+  {x:15, y:45}, {x:85, y:45}, {x:25, y:35}, {x:75, y:35}, {x:50, y:28},
+  {x:35, y:22}, {x:65, y:22}, {x:20, y:18}, {x:80, y:18}, {x:50, y:14},
+  {x:30, y:10}, {x:70, y:10}, {x:45, y:7}, {x:55, y:7}, {x:50, y:3}
+];
+
+// Tukar skrin
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// Mula permainan
+function startGame() {
+  showScreen('tree-screen');
+  renderPathNodes();
+  updateAlphaPosition();
+}
+
+// Lukis laluan nombor
+function renderPathNodes() {
+  const container = document.getElementById('path-nodes');
+  container.innerHTML = '';
+  
+  MISSIONS.forEach((m, i) => {
+    const num = i + 1;
+    const pos = nodePositions[i];
+    const node = document.createElement('div');
+    node.className = 'path-node';
+    node.textContent = num;
+    node.style.left = `${pos.x - 5}%`;
+    node.style.top = `${pos.y}%`;
+    
+    if (completedMissions.includes(num)) {
+      node.classList.add('completed');
+    } else if (num === currentMission && (num === 1 || completedMissions.includes(num - 1))) {
+      node.classList.add('unlocked', 'current');
+      node.onclick = () => openMission(num);
+    } else {
+      node.classList.add('locked');
+    }
+    container.appendChild(node);
+  });
+}
+
+// Kemas kini kedudukan watak
+function updateAlphaPosition() {
+  const idx = currentMission - 1;
+  if (nodePositions[idx]) {
+    alphaPos.x = nodePositions[idx].x;
+    alphaPos.y = nodePositions[idx].y + 5;
+    const alpha = document.getElementById('alpha');
+    alpha.style.left = `calc(${alphaPos.x}% - 22px)`;
+    alpha.style.top = `${alphaPos.y}%`;
+  }
+}
+
+// Buka misi
+function openMission(num) {
+  currentMission = num;
+  selectedItems = [];
+  sortOrder = [];
+  dhikrCount = 0;
+  
+  const m = MISSIONS[num - 1];
+  document.getElementById('mission-title').textContent = m.title;
+  document.getElementById('mission-instruction').textContent = m.instruction;
+  document.getElementById('dhikr-name').textContent = m.dhikr;
+  document.getElementById('dhikr-num').textContent = '0';
+  document.getElementById('dhikr-btn').textContent = '🙏 Saya sudah sebut (0/5)';
+  document.getElementById('done-btn').disabled = true;
+  
+  const area = document.getElementById('task-area');
+  area.innerHTML = '';
+  
+  if (m.type === 'select5' || m.type === 'select6') {
+    renderSelectMode(m);
+  } else if (m.type === 'sort') {
+    renderSortMode(m);
+  }
+  
+  showScreen('mission-screen');
+}
+
+// Mod pilih
+function renderSelectMode(m) {
+  const area = document.getElementById('task-area');
+  const grid = document.createElement('div');
+  grid.className = 'task-grid';
+  
+  m.options.forEach((opt, i) => {
+    const item = document.createElement('div');
+    item.className = 'task-item';
+    item.textContent = opt.text;
+    item.dataset.index = i;
+    item.dataset.correct = opt.correct;
+    item.onclick = () => toggleSelect(item, m);
+    grid.appendChild(item);
+  });
+  area.appendChild(grid);
+}
+
+function toggleSelect(item, m) {
+  const idx = parseInt(item.dataset.index);
+  const targetCount = m.type === 'select6' ? 6 : 5;
+  
+  if (item.classList.contains('selected')) {
+    item.classList.remove('selected');
+    selectedItems = selectedItems.filter(i => i !== idx);
+  } else {
+    if (selectedItems.length >= targetCount) return;
+    item.classList.add('selected');
+    selectedItems.push(idx);
+  }
+  checkDoneButton(targetCount);
+}
+
+// Mod susun
+function renderSortMode(m) {
+  const area = document.getElementById('task-area');
+  const pool = document.createElement('div');
+  pool.className = 'task-grid';
+  const drop = document.createElement('div');
+  drop.className = 'sort-area';
+  drop.id = 'sort-drop-area';
+  drop.innerHTML = '<small style="text-align:center;display:block;color:#666;">Klik di bawah mengikut urutan yang betul:</small>';
+  
+  m.correctOrder.forEach((txt, i) => {
+    const item = document.createElement('div');
+    item.className = 'task-item';
+    item.textContent = txt.replace(/^\d+\.\s*/, '');
+    item.dataset.index = i;
+    item.id = `sort-src-${i}`;
+    item.onclick = () => addToSort(i, txt, m);
+    pool.appendChild(item);
+  });
+  
+  area.appendChild(pool);
+  area.appendChild(drop);
+}
+
+function addToSort(i, txt, m) {
+  if (sortOrder.includes(i)) return;
+  sortOrder.push(i);
+  
+  const src = document.getElementById(`sort-src-${i}`);
+  src.style.opacity = '0.3';
+  src.style.pointerEvents = 'none';
+  
+  const drop = document.getElementById('sort-drop-area');
+  const item = document.createElement('div');
+  item.className = 'sort-box placed';
+  item.textContent = `${sortOrder.length}. ${txt.replace(/^\d+\.\s*/, '')}`;
+  drop.appendChild(item);
+  
+  checkDoneButton(m.correctOrder.length);
+}
+
+// Semak butang siap
+function checkDoneButton(required) {
+  const valid = selectedItems.length >= required || sortOrder.length >= required;
+  document.getElementById('done-btn').disabled = !(valid && dhikrCount >= 5);
+}
+
+// Kira zikir
+function countDhikr() {
+  if (dhikrCount >= 5) return;
+  dhikrCount++;
+  document.getElementById('dhikr-num').textContent = dhikrCount;
+  document.getElementById('dhikr-btn').textContent = dhikrCount >= 5 ? '✅ Selesai!' : `🙏 Saya sudah sebut (${dhikrCount}/5)`;
+  
+  const m = MISSIONS[currentMission - 1];
+  const targetCount = m.type === 'select6' ? 6 : 5;
+  const valid = selectedItems.length >= targetCount || sortOrder.length >= m.correctOrder?.length;
+  document.getElementById('done-btn').disabled = !(valid && dhikrCount >= 5);
+}
+
+// Semak jawapan misi
+function checkMission() {
+  const m = MISSIONS[currentMission - 1];
+  let allCorrect = true;
+  
+  if (m.type === 'select5' || m.type === 'select6') {
+    selectedItems.forEach(idx => {
+      if (!m.options[idx].correct) allCorrect = false;
+    });
+    const correctCount = m.options.filter(o => o.correct).length;
+    if (selectedItems.length !== correctCount) allCorrect = false;
+  } else if (m.type === 'sort') {
+    for (let i = 0; i < sortOrder.length; i++) {
+      if (sortOrder[i] !== i) allCorrect = false;
+    }
+    if (sortOrder.length !== m.correctOrder.length) allCorrect = false;
+  }
+  
+  if (allCorrect) {
+    if (!completedMissions.includes(currentMission)) {
+      completedMissions.push(currentMission);
+      localStorage.setItem('alphaCompleted', JSON.stringify(completedMissions));
+    }
+    showReward(m);
+  } else {
+    alert('😢 Ada yang belum tepat. Cuba semak sekali lagi ya!');
+  }
+}
+
+// Paparkan hadiah
+function showReward(m) {
+  document.getElementById('reward-icon').textContent = m.rewardIcon;
+  document.getElementById('reward-title').textContent = 'TAHNIAH!';
+  document.getElementById('reward-desc').textContent = `Anda selesai ${m.title}! Hadiah: ${m.reward}`;
+  
+  // Hujan hadiah
+  const rain = document.getElementById('rain-container');
+  rain.innerHTML = '';
+  const icons = ['🌟', '✨', '💫', '🎉', '🎊', m.rewardIcon];
+  for (let i = 0; i < 40; i++) {
+    const item = document.createElement('div');
+    item.className = 'rain-item';
+    item.textContent = icons[Math.floor(Math.random() * icons.length)];
+    item.style.left = `${Math.random() * 100}%`;
+    item.style.animationDelay = `${Math.random() * 3}s`;
+    rain.appendChild(item);
+  }
+  
+  if (currentMission >= 20) {
+    document.getElementById('reward-continue').textContent = '🏆 LIHAT HASIL AKHIR';
+  } else {
+    document.getElementById('reward-continue').textContent = 'TERUSKAN 🚀';
+  }
+  
+  showScreen('reward-screen');
+}
+
+// Misi seterusnya
+function nextMission() {
+  if (currentMission >= 20) {
+    showScreen('end-screen');
+  } else {
+    currentMission++;
+    showScreen('tree-screen');
+    renderPathNodes();
+    updateAlphaPosition();
+  }
+}
+
+// Kembali ke peta
+function backToTree() {
+  showScreen('tree-screen');
+  renderPathNodes();
+  updateAlphaPosition();
+}
+
+// Main semula (Reset Data)
+function restartGame() {
+  localStorage.removeItem('alphaCompleted');
+  completedMissions = [];
+  currentMission = 1;
+  showScreen('start-screen');
+}
+
+// Joystick
+const base = document.getElementById('joystick-base');
+const handle = document.getElementById('joystick-handle');
+
+function handleJoystickStart(e) {
+  e.preventDefault();
+  joystickActive = true;
+  const rect = base.getBoundingClientRect();
+  joystickCenter = {x: rect.left + rect.width/2, y: rect.top + rect.height/2};
+}
+
+function handleJoystickMove(e) {
+  if (!joystickActive) return;
+  e.preventDefault();
+  
+  const touch = e.touches ? e.touches[0] : e;
+  let dx = touch.clientX - joystickCenter.x;
+  let dy = touch.clientY - joystickCenter.y;
+  
+  const maxR = 35;
+  const dist = Math.sqrt(dx*dx + dy*dy);
+  if (dist > maxR) {
+    dx = dx / dist * maxR;
+    dy = dy / dist * maxR;
+  }
+  
+  handle.style.transform = `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px))`;
+  
+  // Gerak Alpha
+  const alpha = document.getElementById('alpha');
+  alpha.classList.add('walking');
+  alphaPos.x = Math.max(8, Math.min(92, alphaPos.x + dx * 0.03));
+  alphaPos.y = Math.max(5, Math.min(90, alphaPos.y + dy * 0.03));
+  alpha.style.left = `calc(${alphaPos.x}% - 22px)`;
+  alpha.style.top = `${alphaPos.y}%`;
+}
+
+function handleJoystickEnd(e) {
+  joystickActive = false;
+  handle.style.transform = 'translate(-50%, -50%)';
+  document.getElementById('alpha').classList.remove('walking');
+}
+
+base.addEventListener('mousedown', handleJoystickStart);
+base.addEventListener('touchstart', handleJoystickStart);
+document.addEventListener('mousemove', handleJoystickMove);
+document.addEventListener('touchmove', handleJoystickMove);
+document.addEventListener('mouseup', handleJoystickEnd);
+document.addEventListener('touchend', handleJoystickEnd);
+
+// Mulakan dengan misi yang belum siap
+if (completedMissions.length > 0) {
+  currentMission = completedMissions[completedMissions.length - 1] + 1;
+  if (currentMission > 20) currentMission = 20;
+}
+</script>
+</body>
+</html>
