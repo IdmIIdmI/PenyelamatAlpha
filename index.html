@@ -48,24 +48,12 @@ canvas{width:100%;height:100%;display:block;object-fit:contain}
  text-shadow:2px 2px #552070;text-align:center;
  width:65%;pointer-events:none
 }
-#quiz,#startScreen{
- position:fixed;z-index:20;inset:5%;overflow:auto;
- background:linear-gradient(135deg,#ff45a4,#6939e7,#12a7e0);
- border:4px solid #fff36a;border-radius:22px;
- text-align:center;padding:15px
-}
-#quiz{display:none}
-#quiz h2{color:#fff36a}
-#answers button{
- display:block;width:100%;max-width:480px;margin:9px auto;
- padding:12px;border-radius:12px;border:2px solid white;
- background:linear-gradient(90deg,#fff34c,#ffae31);
- color:#48206f;font-size:16px;font-weight:bold
-}
-#feedback{color:#fff36a;font-weight:bold}
 #startScreen{
- inset:0;display:flex;flex-direction:column;
- justify-content:center;align-items:center;padding:20px
+ position:fixed;z-index:20;inset:0;display:flex;
+ flex-direction:column;justify-content:center;align-items:center;
+ padding:20px;overflow:auto;
+ background:linear-gradient(135deg,#ff45a4,#6939e7,#12a7e0);
+ border:4px solid #fff36a;border-radius:22px;text-align:center
 }
 #startScreen h1{
  color:#fff34c;font-size:clamp(25px,5vw,45px);
@@ -125,15 +113,6 @@ canvas{width:100%;height:100%;display:block;object-fit:contain}
  </div>
 </div>
 
-<div id="quiz">
- <h2>🕌 MISI ILMU SOLAT</h2>
- <p>Jawab dengan betul untuk sambung misi!</p>
- <h3 id="question"></h3>
- <button onclick="readQuestion()">🔊 DENGAR SOALAN</button>
- <div id="answers"></div>
- <h3 id="feedback"></h3>
-</div>
-
 <script>
 "use strict";
 
@@ -142,42 +121,42 @@ const ctx=canvas.getContext("2d");
 
 let player={x:100,y:220};
 let bullets=[],enemies=[],enemyShots=[],items=[],particles=[];
+
 let score=0,gems=0,hp=3,hits=0;
 let level=1,kills=0;
+
+const PLAYER_MAX_HITS=3;
+const ENEMY_MAX_HP=5;
+
 let active=false,paused=false,flying=false;
 let boss=null,bossSpawned=false;
 let bombCount=3,bombCooldown=0;
 let shootHeld=false,lastShot=0;
 let lastSpawn=0,lastItem=0;
 let gameTime=0,lastTime=0;
-let questionOrder=[],questionIndex=0;
 let joy={x:0,y:0};
 let keys={};
 let audioCtx=null;
 
-const stages=[
- {name:"MUDAH",speed:65,fire:.008,interval:1500},
- {name:"SEDANG",speed:90,fire:.015,interval:1250},
- {name:"SUSAH SIKIT",speed:120,fire:.025,interval:1050},
- {name:"SUSAH",speed:150,fire:.038,interval:850},
- {name:"AMAT SUSAH",speed:185,fire:.055,interval:700}
-];
+// Kawalan supaya pemain tidak terkena berulang kali
+// dalam masa yang terlalu singkat.
+let lastDamage=0;
+const DAMAGE_COOLDOWN=1000;
 
-const questions=[
- {q:"Berapakah bilangan solat fardu sehari semalam?",
-  a:["4","5","6","7"],c:1},
- {q:"Apakah solat yang dilakukan pada waktu subuh?",
-  a:["Subuh","Zohor","Asar","Isyak"],c:0},
- {q:"Berapakah rakaat solat Maghrib?",
-  a:["2","3","4","5"],c:1},
- {q:"Ke arah manakah umat Islam menghadap ketika solat?",
-  a:["Timur","Kiblat","Utara","Barat"],c:1},
- {q:"Apakah solat fardu selepas matahari terbenam?",
-  a:["Subuh","Zohor","Maghrib","Asar"],c:2}
+// =========================
+// PERINGKAT PERMAINAN
+// =========================
+
+const stages=[
+ {name:"MUDAH",speed:80,fire:.012,interval:1100},
+ {name:"SEDANG",speed:110,fire:.020,interval:900},
+ {name:"SUSAH SIKIT",speed:140,fire:.030,interval:750},
+ {name:"SUSAH",speed:175,fire:.045,interval:600},
+ {name:"AMAT SUSAH",speed:210,fire:.060,interval:450}
 ];
 
 // =========================
-// GAMBAR WATAK SVG
+// GAMBAR WATAK
 // =========================
 
 function makeSprite(svg){
@@ -242,7 +221,6 @@ const monsterSVGs=[
 </svg>`
 ];
 
-// PENTING: nama ini berbeza daripada array enemies!
 const enemySprites=monsterSVGs.map(makeSprite);
 
 const bossSprite=makeSprite(`
@@ -258,7 +236,7 @@ const bossSprite=makeSprite(`
 </svg>`);
 
 // =========================
-// BUNYI DAN SUARA
+// BUNYI
 // =========================
 
 function sound(freq=500,duration=.15,type="square"){
@@ -299,7 +277,7 @@ function updateHUD(){
  document.getElementById("gems").textContent="💎 "+gems;
  document.getElementById("bombs").textContent="💣 "+bombCount;
  document.getElementById("level").textContent=
- "LEVEL "+level+" - "+stages[level-1].name;
+ "🏆 LEVEL "+level;
 }
 
 // =========================
@@ -318,17 +296,21 @@ async function startGame(){
 
  player={x:100,y:220};
  bullets=[];enemies=[];enemyShots=[];items=[];particles=[];
+
  score=0;gems=0;hp=3;hits=0;
- level=1;kills=0;boss=null;bossSpawned=false;
- flying=false;bombCount=3;bombCooldown=0;
- questionOrder=[];questionIndex=0;
+ level=1;kills=0;
+ boss=null;bossSpawned=false;
+ flying=false;
+ bombCount=3;bombCooldown=0;
+
  active=true;paused=false;shootHeld=false;
  joy={x:0,y:0};keys={};
- lastSpawn=0;lastItem=0;lastShot=0;gameTime=0;
- lastTime=0;
+
+ lastSpawn=0;lastItem=0;lastShot=0;
+ gameTime=0;lastTime=0;
+ lastDamage=0;
 
  document.getElementById("startScreen").style.display="none";
- document.getElementById("quiz").style.display="none";
  document.getElementById("startSubtitle").textContent=
  "🚗 TRANSFORM • 🔫 SHOOT • 💣 BOOM";
  document.getElementById("startButton").textContent="▶ MULA BERMAIN";
@@ -346,7 +328,9 @@ async function startGame(){
 function transform(){
  if(!active||paused)return;
  flying=!flying;
+
  for(let i=0;i<24;i++)burst(player.x+35,player.y+25);
+
  sound(350,.35,"sawtooth");
  message(flying?"✈️ MOD KAPAL TERBANG!":"🚗 MOD KERETA!");
 }
@@ -357,8 +341,8 @@ function transform(){
 
 function shoot(){
  if(!active||paused||Date.now()-lastShot<230)return;
- lastShot=Date.now();
 
+ lastShot=Date.now();
  bullets.push({x:player.x+75,y:player.y+30,used:false});
  sound(850,.09);
 }
@@ -372,6 +356,7 @@ function bomb(){
 
  bombCount--;
  bombCooldown=Date.now()+1800;
+
  explosion(player.x+150,player.y+20);
 
  enemies.forEach(e=>{
@@ -389,6 +374,7 @@ function bomb(){
  }
 
  enemyShots=enemyShots.filter(b=>Math.abs(b.x-player.x)>300);
+
  message("💣 BOOOOOOM!");
  updateHUD();
 }
@@ -439,8 +425,10 @@ joyBase.addEventListener("pointerup",e=>{
   joystickEnd();
  }
 });
+
 joyBase.addEventListener("pointercancel",()=>{
- joyPointer=null;joystickEnd();
+ joyPointer=null;
+ joystickEnd();
 });
 
 // =========================
@@ -463,15 +451,17 @@ fireBtn.addEventListener("pointercancel",stopFire);
 fireBtn.addEventListener("lostpointercapture",stopFire);
 
 document.getElementById("bomb").addEventListener("pointerdown",e=>{
- e.preventDefault();bomb();
+ e.preventDefault();
+ bomb();
 });
 
 document.getElementById("transformBtn").addEventListener("pointerdown",e=>{
- e.preventDefault();transform();
+ e.preventDefault();
+ transform();
 });
 
 // =========================
-// KEYBOARD KOMPUTER
+// KEYBOARD
 // =========================
 
 document.addEventListener("keydown",e=>{
@@ -502,6 +492,7 @@ function getMovement(){
 
  let len=Math.hypot(x,y);
  if(len>1){x/=len;y/=len}
+
  return{x,y};
 }
 
@@ -511,8 +502,10 @@ function getMovement(){
 
 function burst(x,y){
  particles.push({
-  x,y,vx:(Math.random()-.5)*7,
-  vy:(Math.random()-.5)*7,life:35,
+  x,y,
+  vx:(Math.random()-.5)*7,
+  vy:(Math.random()-.5)*7,
+  life:35,
   color:["#fff000","#ff3c9c","#31ffff","#8aff3c","#b56aff"][Math.floor(Math.random()*5)]
  });
 }
@@ -533,6 +526,7 @@ function killEnemy(e){
  e.dead=true;
  score+=100;
  kills++;
+
  explosion(e.x,e.y);
 
  if(Math.random()<.65){
@@ -541,18 +535,20 @@ function killEnemy(e){
    type:Math.floor(Math.random()*3)
   });
  }
+
+ updateHUD();
 }
 
 function spawnEnemy(){
- if(enemies.length>=6||boss||level===5&&kills>=6)return;
+ if(enemies.length>=12||boss||level===5&&kills>=6)return;
 
  let type=Math.floor(Math.random()*enemySprites.length);
 
  enemies.push({
-  x:930,
+  x:930+Math.random()*100,
   y:40+Math.random()*390,
   baseY:40+Math.random()*390,
-  hp:3,
+  hp:ENEMY_MAX_HP,
   type,
   dead:false,
   phase:Math.random()*6
@@ -561,7 +557,8 @@ function spawnEnemy(){
 
 function spawnItem(){
  items.push({
-  x:930,y:40+Math.random()*400,
+  x:930,
+  y:40+Math.random()*400,
   type:Math.floor(Math.random()*3)
  });
 }
@@ -571,87 +568,77 @@ function collision(a,b,d=35){
 }
 
 // =========================
-// KENA TEMBAKAN
+// GAME OVER
+// =========================
+
+function gameOver(){
+ if(!active)return;
+
+ active=false;
+ paused=false;
+ shootHeld=false;
+
+ hp=0;
+ score=0;
+ gems=0;
+ hits=0;
+ level=1;
+ kills=0;
+ bombCount=3;
+
+ bullets=[];
+ enemies=[];
+ enemyShots=[];
+ items=[];
+ particles=[];
+ boss=null;
+ bossSpawned=false;
+
+ joy={x:0,y:0};
+ keys={};
+
+ updateHUD();
+
+ message("💀 GAME OVER!");
+
+ sound(100,.7,"sawtooth");
+ say("Game over! Cuba lagi.");
+
+ document.getElementById("startScreen").style.display="flex";
+
+ document.getElementById("startSubtitle").textContent=
+ "💀 GAME OVER! SKOR DAN GEM KEMBALI KE SIFAR!";
+
+ document.getElementById("startButton").textContent=
+ "🔄 MAIN SEMULA";
+}
+
+// =========================
+// PEMAIN TERKENA MUSUH
 // =========================
 
 function damage(){
- if(paused||!active)return;
+ if(!active||paused)return;
+
+ let now=Date.now();
+
+ // Elak nyawa berkurang terlalu cepat
+ if(now-lastDamage<DAMAGE_COOLDOWN)return;
+
+ lastDamage=now;
 
  hp--;
  hits++;
+
  sound(110,.25,"sawtooth");
  updateHUD();
 
- if(hits>=3){
-  showQuiz();
+ if(hits>=PLAYER_MAX_HITS){
+  gameOver();
   return;
  }
 
- message("AWAS! KENA TEMBAK!");
-}
-
-// =========================
-// SOALAN SOLAT
-// =========================
-
-function showQuiz(){
- paused=true;
- shootHeld=false;
-
- if(questionIndex>=questionOrder.length){
-  questionOrder=[0,1,2,3,4].sort(()=>Math.random()-.5);
-  questionIndex=0;
- }
-
- let q=questions[questionOrder[questionIndex++]];
-
- document.getElementById("question").textContent=q.q;
- document.getElementById("feedback").textContent="";
-
- let box=document.getElementById("answers");
- box.innerHTML="";
-
- q.a.forEach((answer,i)=>{
-  let b=document.createElement("button");
-  b.textContent=["A","B","C","D"][i]+". "+answer;
-
-  b.onclick=()=>{
-   if(i===q.c){
-    document.getElementById("feedback").textContent=
-    "BETUL! TAHNIAH! 🎉";
-
-    sound(950,.4,"sine");
-    hp=3;
-    hits=0;
-
-    setTimeout(()=>{
-     document.getElementById("quiz").style.display="none";
-     paused=false;
-     message("HEBAT! TERUSKAN MISI!");
-     updateHUD();
-    },900);
-
-   }else{
-    document.getElementById("feedback").textContent=
-    "SALAH! CUBA LAGI 😊";
-    sound(150,.3);
-    say("Jawapan salah. Cuba lagi.");
-   }
-  };
-
-  box.appendChild(b);
- });
-
- document.getElementById("quiz").style.display="block";
- readQuestion();
-}
-
-function readQuestion(){
- let q=document.getElementById("question").textContent;
- let answers=[...document.querySelectorAll("#answers button")]
-  .map(b=>b.textContent).join(". ");
-
- say(q+". Pilih jawapan A, B, C atau D. "+answers);
+ message("AWAS! TERKENA MUSUH! "+(3-hits)+" PELUANG LAGI!");
 }
 
 // =========================
@@ -668,11 +655,13 @@ function nextLevel(){
  bullets=[];
  boss=null;
  bossSpawned=false;
+
  lastSpawn=performance.now();
 
  message("TAHNIAH! PERINGKAT "+level+"!");
  sound(700,.5,"sine");
  say("Tahniah! Peringkat "+level);
+
  updateHUD();
 }
 
@@ -698,13 +687,15 @@ function winGame(){
  say("Tahniah! Anda juara! Semua peringkat selesai!");
 
  document.getElementById("startScreen").style.display="flex";
+
  document.getElementById("startSubtitle").textContent=
  "🏆 TAHNIAH! SKOR AKHIR: "+score;
+
  document.getElementById("startButton").textContent="MAIN SEMULA";
 }
 
 // =========================
-// LUKIS LATAR
+// LATAR BELAKANG
 // =========================
 
 function background(){
@@ -712,16 +703,15 @@ function background(){
  g.addColorStop(0,"#21caff");
  g.addColorStop(.65,"#b1f6ff");
  g.addColorStop(1,"#fff0ad");
+
  ctx.fillStyle=g;
  ctx.fillRect(0,0,900,500);
 
- // Matahari
  ctx.fillStyle="#fff34b";
  ctx.beginPath();
  ctx.arc(770,75,43,0,7);
  ctx.fill();
 
- // Gunung
  ctx.fillStyle="#a18ae1";
  ctx.beginPath();
  ctx.moveTo(0,330);
@@ -734,7 +724,6 @@ function background(){
  ctx.lineTo(0,420);
  ctx.fill();
 
- // Bandar
  for(let i=0;i<10;i++){
   let x=i*100;
   let h=65+(i*37)%100;
@@ -743,6 +732,7 @@ function background(){
   ctx.fillRect(x,420-h,72,h);
 
   ctx.fillStyle="#fff5a2";
+
   for(let y=430-h;y<405;y+=22){
    for(let z=x+12;z<x+65;z+=23){
     ctx.fillRect(z,y,10,12);
@@ -750,16 +740,16 @@ function background(){
   }
  }
 
- // Jalan
  ctx.fillStyle="#515d85";
  ctx.fillRect(0,440,900,60);
 
  ctx.fillStyle="white";
+
  for(let x=0;x<900;x+=100)
   ctx.fillRect(x,468,45,6);
 
- // Awan bergerak
  ctx.fillStyle="white";
+
  for(let i=0;i<4;i++){
   let x=(i*245+60+gameTime*30)%1000-60;
   let y=75+i%2*65;
@@ -773,7 +763,7 @@ function background(){
 }
 
 // =========================
-// PAPAR PERMAINAN
+// LUKIS PERMAINAN
 // =========================
 
 function draw(){
@@ -797,7 +787,7 @@ function draw(){
   ctx.restore();
  });
 
- // Musuh
+ // Musuh dan bar nyawa
  enemies.forEach(e=>{
   let img=enemySprites[e.type];
 
@@ -807,8 +797,16 @@ function draw(){
 
   ctx.fillStyle="#ff3434";
   ctx.fillRect(e.x,e.y-9,75,7);
+
   ctx.fillStyle="#53f65d";
-  ctx.fillRect(e.x,e.y-9,75*e.hp/3,7);
+  ctx.fillRect(
+   e.x,e.y-9,
+   75*Math.max(0,e.hp/ENEMY_MAX_HP),7
+  );
+
+  ctx.fillStyle="white";
+  ctx.font="bold 12px Arial";
+  ctx.fillText(e.hp+"/5",e.x+23,e.y-14);
  });
 
  // Harta
@@ -831,7 +829,7 @@ function draw(){
   ctx.fillRect(boss.x,boss.y-14,150,10);
 
   ctx.fillStyle="#4bfa65";
-  ctx.fillRect(boss.x,boss.y-14,150*boss.hp/15,10);
+  ctx.fillRect(boss.x,boss.y-14,150*boss.hp/30,10);
 
   ctx.fillStyle="white";
   ctx.font="bold 17px Arial";
@@ -858,7 +856,7 @@ function update(dt){
 
  gameTime+=dt;
 
- // Gerakan
+ // Gerakan pemain
  let movement=getMovement();
 
  player.x+=movement.x*260*dt;
@@ -880,16 +878,23 @@ function update(dt){
   e.y=e.baseY+Math.sin(gameTime*2+e.phase)*12;
 
   if(Math.random()<diff.fire*dt){
-   enemyShots.push({x:e.x,y:e.y+35,used:false});
+   enemyShots.push({
+    x:e.x,
+    y:e.y+35,
+    used:false
+   });
   }
  });
 
- // Peluru terkena musuh
+ // Peluru pemain mengenai musuh
  bullets.forEach(b=>{
   enemies.forEach(e=>{
-   if(!b.used&&!e.dead&&collision(b,{x:e.x+38,y:e.y+38},43)){
+   if(!b.used&&!e.dead&&collision(
+    b,{x:e.x+38,y:e.y+38},43
+   )){
     b.used=true;
     e.hp--;
+
     sound(230,.08);
 
     if(e.hp<=0)killEnemy(e);
@@ -901,10 +906,12 @@ function update(dt){
  enemies=enemies.filter(e=>!e.dead&&e.x>-100);
 
  // Boss terakhir
- if(level===5&&kills>=6&&!boss&& !bossSpawned){
+ if(level===5&&kills>=6&&!boss&&!bossSpawned){
   bossSpawned=true;
   enemies=[];
-  boss={x:730,y:170,hp:15};
+
+  boss={x:730,y:170,hp:30};
+
   say("Boss terakhir datang!");
   message("⚠️ BOSS TERAKHIR!");
  }
@@ -914,11 +921,17 @@ function update(dt){
   boss.y=160+Math.sin(gameTime*2)*25;
 
   if(Math.random()<.8*dt){
-   enemyShots.push({x:boss.x,y:boss.y+65,used:false});
+   enemyShots.push({
+    x:boss.x,
+    y:boss.y+65,
+    used:false
+   });
   }
 
   bullets.forEach(b=>{
-   if(!b.used&&collision(b,{x:boss.x+70,y:boss.y+70},85)){
+   if(!b.used&&collision(
+    b,{x:boss.x+70,y:boss.y+70},85
+   )){
     b.used=true;
     boss.hp--;
 
@@ -929,17 +942,35 @@ function update(dt){
   });
  }
 
- // Peluru musuh
+ // Peluru musuh terkena pemain
  enemyShots.forEach(b=>{
   b.x-=300*dt;
 
-  if(!b.used&&collision(b,{x:player.x+45,y:player.y+30},35)){
+  if(!b.used&&collision(
+   b,{x:player.x+45,y:player.y+30},35
+  )){
    b.used=true;
    damage();
   }
  });
 
  enemyShots=enemyShots.filter(b=>b.x>0&&!b.used);
+
+ // PEMAIN BERLANGGAR DENGAN MUSUH
+ enemies.forEach(e=>{
+  if(!e.dead&&collision(
+   {x:player.x+50,y:player.y+32},
+   {x:e.x+39,y:e.y+39},
+   58
+  )){
+   damage();
+
+   if(active){
+    // Tolak sedikit musuh selepas perlanggaran
+    e.x+=35;
+   }
+  }
+ });
 
  // Harta karun
  items.forEach(t=>t.x-=120*dt);
@@ -948,11 +979,14 @@ function update(dt){
   if(collision(t,{x:player.x+45,y:player.y+30},42)){
    score+=t.type===1?50:20;
    gems++;
+
    sound(1100,.12,"sine");
 
    for(let i=0;i<12;i++)burst(t.x,t.y);
+
    return false;
   }
+
   return t.x>-50;
  });
 
@@ -965,7 +999,7 @@ function update(dt){
 
  particles=particles.filter(p=>p.life>0);
 
- // Tamat peringkat 1 hingga 4
+ // Peringkat 1 hingga 4
  if(level<5&&kills>=6){
   nextLevel();
  }
@@ -1000,6 +1034,10 @@ function loop(now){
 
  requestAnimationFrame(loop);
 }
+
+// =========================
+// MULA
+// =========================
 
 updateHUD();
 requestAnimationFrame(loop);
