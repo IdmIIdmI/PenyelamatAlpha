@@ -8,93 +8,77 @@
 
 <style>
 *{box-sizing:border-box;touch-action:none}
-body{margin:0;overflow:hidden;background:#11152e;font-family:Arial}
-#gameScreen{
- width:100vw;height:100dvh;
- display:flex;flex-direction:column;
- background:linear-gradient(120deg,#147bc4,#8b36bd);
-}
+body{margin:0;background:#11152d;color:white;font-family:Arial;overflow:hidden}
+#gameScreen{width:100vw;height:100dvh;display:flex;flex-direction:column;background:#171c42}
 #topbar{
- height:42px;flex-shrink:0;
- display:flex;align-items:center;justify-content:space-around;
- background:linear-gradient(90deg,#fa278f,#7737db,#078fc9);
- color:white;font-weight:bold;font-size:clamp(11px,2vw,17px);
+ height:40px;flex-shrink:0;display:flex;align-items:center;
+ justify-content:space-around;gap:3px;
+ background:linear-gradient(90deg,#ff299a,#7138ed,#05b8dc);
+ font-size:clamp(10px,2vw,16px);font-weight:bold
 }
-#stage{position:relative;flex:1;min-height:0;overflow:hidden}
-canvas{width:100%;height:100%;display:block}
+#stage{flex:1;min-height:0;position:relative;overflow:hidden}
+canvas{width:100%;height:100%;display:block;object-fit:contain}
 #mobileControls{position:absolute;inset:0;pointer-events:none}
 #joystick{
- position:absolute;left:2%;bottom:5%;
- width:clamp(85px,17vw,140px);aspect-ratio:1;
- border-radius:50%;background:#ffffff28;
- border:2px solid #ffffff9c;
- box-shadow:inset 0 0 20px #fff3,0 0 15px #fff5;
- backdrop-filter:blur(4px);pointer-events:auto;
+ position:absolute;left:2%;bottom:5%;width:clamp(85px,17vw,140px);
+ aspect-ratio:1;border-radius:50%;background:#ffffff28;
+ border:2px solid #ffffff99;backdrop-filter:blur(4px);
+ pointer-events:auto;box-shadow:0 0 18px #ffffff30
 }
 #stick{
- position:absolute;left:30%;top:30%;width:40%;height:40%;
- border-radius:50%;background:#ffffffa8;
- border:2px solid white;box-shadow:0 0 14px white;
+ position:absolute;width:40%;height:40%;left:30%;top:30%;
+ border-radius:50%;background:#ffffffa8;border:2px solid white;
+ box-shadow:0 0 12px white
 }
 .action{
  position:absolute;pointer-events:auto;border-radius:50%;
- display:flex;flex-direction:column;align-items:center;
- justify-content:center;color:white;font-weight:bold;
- border:2px solid #ffffffd0;backdrop-filter:blur(5px);
- box-shadow:0 0 15px #fff6;user-select:none;
+ display:flex;flex-direction:column;align-items:center;justify-content:center;
+ color:white;font-weight:bold;border:2px solid white;
+ backdrop-filter:blur(5px);user-select:none;
+ box-shadow:0 0 15px #ffffff55
 }
-.action span{font-size:clamp(23px,5vw,40px)}
+.action span{font-size:clamp(23px,5vw,38px)}
 .action small{font-size:clamp(8px,1.5vw,12px)}
-#fire{
- width:clamp(65px,13vw,105px);aspect-ratio:1;
- right:3%;bottom:7%;background:#fa247eae;
-}
-#bomb{
- width:clamp(53px,10vw,80px);aspect-ratio:1;
- right:19%;bottom:5%;background:#ff9c20b9;
-}
-#transformBtn{
- width:clamp(55px,10vw,78px);aspect-ratio:1;
- right:3%;top:5%;background:#913be9b9;
-}
+#fire{width:clamp(67px,13vw,105px);aspect-ratio:1;right:3%;bottom:7%;background:#ff267cbd}
+#bomb{width:clamp(53px,10vw,80px);aspect-ratio:1;right:19%;bottom:5%;background:#ff9c20bd}
+#transformBtn{width:clamp(52px,10vw,75px);aspect-ratio:1;right:3%;top:5%;background:#9146e5bd}
 #message{
  position:absolute;top:4%;left:50%;transform:translateX(-50%);
- width:65%;text-align:center;color:white;font-weight:bold;
- font-size:clamp(11px,2vw,17px);
- text-shadow:2px 2px 4px #45105e;pointer-events:none;
+ font-weight:bold;font-size:clamp(10px,2vw,17px);
+ text-shadow:2px 2px #552070;text-align:center;
+ width:65%;pointer-events:none
 }
-#startScreen,#quiz,#gameOver{
- position:fixed;inset:0;z-index:30;
- display:flex;flex-direction:column;
- justify-content:center;align-items:center;
- text-align:center;padding:18px;
- background:linear-gradient(135deg,#ff42a2,#7136dd,#10a9e5);
- color:white;
+#quiz,#startScreen{
+ position:fixed;z-index:20;inset:5%;overflow:auto;
+ background:linear-gradient(135deg,#ff45a4,#6939e7,#12a7e0);
+ border:4px solid #fff36a;border-radius:22px;
+ text-align:center;padding:15px
 }
-#startScreen h1{color:#fff34c;text-shadow:3px 4px #922879;
- font-size:clamp(25px,5vw,45px)}
-.mainButton{
- padding:14px 30px;border:3px solid white;border-radius:15px;
- background:#fff13c;color:#532078;font-size:19px;font-weight:bold;
-}
-#quiz{
- display:none;inset:4%;border:4px solid #fff34b;
- border-radius:22px;overflow:auto;
-}
-#quiz h2{color:#fff34b}
+#quiz{display:none}
+#quiz h2{color:#fff36a}
 #answers button{
- display:block;width:min(100%,470px);margin:9px auto;
- padding:12px;border:2px solid white;border-radius:12px;
- background:linear-gradient(90deg,#fff34b,#ffad32);
- color:#48206f;font-weight:bold;font-size:16px;
+ display:block;width:100%;max-width:480px;margin:9px auto;
+ padding:12px;border-radius:12px;border:2px solid white;
+ background:linear-gradient(90deg,#fff34c,#ffae31);
+ color:#48206f;font-size:16px;font-weight:bold
 }
-#feedback{color:#fff34b}
-#gameOver{display:none}
+#feedback{color:#fff36a;font-weight:bold}
+#startScreen{
+ inset:0;display:flex;flex-direction:column;
+ justify-content:center;align-items:center;padding:20px
+}
+#startScreen h1{
+ color:#fff34c;font-size:clamp(25px,5vw,45px);
+ text-shadow:3px 4px #9e247d
+}
+#startScreen button{
+ padding:15px 35px;border:3px solid white;border-radius:16px;
+ background:#fff23b;font-size:20px;font-weight:bold;color:#512080
+}
 #rotateMessage{
  display:none;position:fixed;inset:0;z-index:100;
- background:#17102f;color:white;
- align-items:center;justify-content:center;text-align:center;
- font-size:23px;padding:25px;
+ background:#17102f;align-items:center;justify-content:center;
+ text-align:center;padding:25px;font-size:23px
 }
 @media(orientation:portrait){
  #rotateMessage{display:flex}
@@ -109,13 +93,13 @@ canvas{width:100%;height:100%;display:block}
   <span id="hp">❤️ 3</span>
   <span id="score">⭐ 0</span>
   <span id="gems">💎 0</span>
-  <span id="bombCount">💣 3</span>
+  <span id="bombs">💣 3</span>
   <span id="level">🏆 LEVEL 1</span>
  </div>
 
  <div id="stage">
   <canvas id="game" width="900" height="500"></canvas>
-  <div id="message">KALAHKAN SEMUA MUSUH!</div>
+  <div id="message">MISI: KALAHKAN SEMUA MUSUH!</div>
 
   <div id="mobileControls">
    <div id="joystick"><div id="stick"></div></div>
@@ -128,204 +112,201 @@ canvas{width:100%;height:100%;display:block}
 
 <div id="startScreen">
  <h1>🌈 RAINBOW TRANSFORMER HERO 🌈</h1>
- <h2>🚗 TRANSFORM • 🔫 SHOOT • 💣 BOOM</h2>
- <p>5 PERINGKAT • 5 SOALAN SOLAT</p>
- <button class="mainButton" onclick="startGame()">▶ MULA BERMAIN</button>
- <p>Gunakan telefon dalam kedudukan landscape.</p>
-</div>
-
-<div id="quiz">
- <h2>🕌 MISI ILMU SOLAT</h2>
- <p>Jawab soalan dengan betul untuk meneruskan permainan!</p>
- <h3 id="question"></h3>
- <button class="mainButton" onclick="readQuestion()">🔊 DENGAR SOALAN</button>
- <div id="answers"></div>
- <h3 id="feedback"></h3>
-</div>
-
-<div id="gameOver">
- <h1>💥 GAME OVER!</h1>
- <h2 id="finalScore"></h2>
- <button class="mainButton" onclick="startGame()">🔄 MAIN SEMULA</button>
+ <h2 id="startSubtitle">🚗 TRANSFORM • 🔫 SHOOT • 💣 BOOM</h2>
+ <p>5 PERINGKAT • 5 SOALAN SOLAT • BOSS TERAKHIR</p>
+ <button id="startButton" onclick="startGame()">▶ MULA BERMAIN</button>
+ <p>Gunakan telefon secara landscape.</p>
 </div>
 
 <div id="rotateMessage">
  <div>📱<br><br>
- SILA PUSING TELEFON KE LANDSCAPE
- <br><br><small>Untuk pengalaman permainan terbaik.</small>
+ SILA PUSING TELEFON KE LANDSCAPE<br><br>
+ <small>Untuk pengalaman permainan terbaik.</small>
  </div>
 </div>
 
+<div id="quiz">
+ <h2>🕌 MISI ILMU SOLAT</h2>
+ <p>Jawab dengan betul untuk sambung misi!</p>
+ <h3 id="question"></h3>
+ <button onclick="readQuestion()">🔊 DENGAR SOALAN</button>
+ <div id="answers"></div>
+ <h3 id="feedback"></h3>
+</div>
+
 <script>
+"use strict";
+
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
 
-const $=id=>document.getElementById(id);
-
 let player={x:100,y:220};
 let bullets=[],enemies=[],enemyShots=[],items=[],particles=[];
-let score=0,gems=0,hp=3,level=1,kills=0;
+let score=0,gems=0,hp=3,hits=0;
+let level=1,kills=0;
 let active=false,paused=false,flying=false;
-let boss=null,bombCount=3,bombCooldown=0;
+let boss=null,bossSpawned=false;
+let bombCount=3,bombCooldown=0;
 let shootHeld=false,lastShot=0;
+let lastSpawn=0,lastItem=0;
+let gameTime=0,lastTime=0;
+let questionOrder=[],questionIndex=0;
 let joy={x:0,y:0};
-let gameTime=0,lastTime=0,lastSpawn=0,lastItem=0;
-let hits=0,questionOrder=[],currentQuestion=null;
-let audioContext=null;
+let keys={};
+let audioCtx=null;
 
 const stages=[
- {name:"MUDAH",speed:1.1,rate:1700,damage:.006},
- {name:"SEDANG",speed:1.6,rate:1350,damage:.012},
- {name:"SUSAH SIKIT",speed:2.1,rate:1100,damage:.019},
- {name:"SUSAH",speed:2.8,rate:900,damage:.028},
- {name:"AMAT SUSAH",speed:3.5,rate:700,damage:.040}
+ {name:"MUDAH",speed:65,fire:.008,interval:1500},
+ {name:"SEDANG",speed:90,fire:.015,interval:1250},
+ {name:"SUSAH SIKIT",speed:120,fire:.025,interval:1050},
+ {name:"SUSAH",speed:150,fire:.038,interval:850},
+ {name:"AMAT SUSAH",speed:185,fire:.055,interval:700}
 ];
 
 const questions=[
  {q:"Berapakah bilangan solat fardu sehari semalam?",
- a:["4","5","6","7"],c:1},
- {q:"Solat Subuh mempunyai berapa rakaat?",
- a:["2","3","4","5"],c:0},
+  a:["4","5","6","7"],c:1},
+ {q:"Apakah solat yang dilakukan pada waktu subuh?",
+  a:["Subuh","Zohor","Asar","Isyak"],c:0},
  {q:"Berapakah rakaat solat Maghrib?",
- a:["2","3","4","5"],c:1},
+  a:["2","3","4","5"],c:1},
  {q:"Ke arah manakah umat Islam menghadap ketika solat?",
- a:["Timur","Kiblat","Utara","Barat"],c:1},
- {q:"Solat Isyak mempunyai berapa rakaat?",
- a:["2","3","4","5"],c:2}
+  a:["Timur","Kiblat","Utara","Barat"],c:1},
+ {q:"Apakah solat fardu selepas matahari terbenam?",
+  a:["Subuh","Zohor","Maghrib","Asar"],c:2}
 ];
 
-// Sprite kenderaan
-function sprite(svg){
- const img=new Image();
+// =========================
+// GAMBAR WATAK SVG
+// =========================
+
+function makeSprite(svg){
+ let img=new Image();
  img.src="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(svg);
  return img;
 }
 
-const car=sprite(`
+const car=makeSprite(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 100">
 <defs>
- <linearGradient id="body" x2="0" y2="1">
- <stop stop-color="#ffc1e5"/><stop offset=".4" stop-color="#ff2990"/>
- <stop offset="1" stop-color="#9d0750"/>
- </linearGradient>
- <linearGradient id="glass"><stop stop-color="#d8ffff"/><stop offset="1" stop-color="#2382bc"/></linearGradient>
+<linearGradient id="b" x2="0" y2="1">
+<stop stop-color="#ffb4e1"/><stop offset=".4" stop-color="#ff287b"/>
+<stop offset="1" stop-color="#a90050"/></linearGradient>
+<linearGradient id="g"><stop stop-color="#b9faff"/><stop offset="1" stop-color="#1680be"/></linearGradient>
 </defs>
-<ellipse cx="90" cy="88" rx="80" ry="7" fill="#183d55" opacity=".4"/>
-<path d="M9 64L19 43Q24 34 44 32L65 12Q73 5 96 8L126 19Q139 26 145 44L168 51Q177 55 174 72L167 79H10Z" fill="url(#body)" stroke="#741347" stroke-width="3"/>
-<path d="M48 34L69 14Q75 10 94 13L108 18L117 38Z" fill="url(#glass)" stroke="white" stroke-width="2"/>
-<path d="M122 23L137 43L115 38L101 18Z" fill="url(#glass)" stroke="white" stroke-width="2"/>
-<path d="M16 54Q80 45 159 55" stroke="#ffc5e5" stroke-width="4" fill="none"/>
-<path d="M12 64L33 61L33 71H12Z" fill="#fff9b1"/>
-<path d="M148 60H169V69H148Z" fill="white"/>
-<circle cx="47" cy="76" r="17" fill="#252338" stroke="#ddd" stroke-width="3"/>
-<circle cx="47" cy="76" r="8" fill="#b9c9d5"/>
-<circle cx="137" cy="76" r="17" fill="#252338" stroke="#ddd" stroke-width="3"/>
-<circle cx="137" cy="76" r="8" fill="#b9c9d5"/>
-<path d="M65 9L78 3L93 9" fill="none" stroke="#ffe45c" stroke-width="4"/>
+<ellipse cx="90" cy="88" rx="80" ry="7" fill="#183d55" opacity=".3"/>
+<path d="M12 65 L19 42 Q23 35 43 33 L65 12 Q72 5 94 8 L126 18 Q137 24 143 43 L164 50 Q174 54 174 69 L169 77 L8 77Z" fill="url(#b)" stroke="#6b1649" stroke-width="3"/>
+<path d="M48 34 L69 14 Q74 11 92 13 L107 18 L117 37Z" fill="url(#g)" stroke="white" stroke-width="2"/>
+<path d="M121 23 L135 42 L113 37 L101 18Z" fill="url(#g)" stroke="white" stroke-width="2"/>
+<path d="M15 53 Q83 44 158 54" fill="none" stroke="#ffb9dc" stroke-width="4"/>
+<path d="M15 65 L31 61 L34 70 L13 70Z" fill="#fff6a0"/>
+<circle cx="47" cy="75" r="17" fill="#25233b" stroke="#ddd" stroke-width="3"/>
+<circle cx="47" cy="75" r="8" fill="#9ab6c7"/>
+<circle cx="137" cy="75" r="17" fill="#25233b" stroke="#ddd" stroke-width="3"/>
+<circle cx="137" cy="75" r="8" fill="#9ab6c7"/>
 </svg>`);
 
-const plane=sprite(`
+const plane=makeSprite(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 110">
 <defs><linearGradient id="p" x2="0" y2="1">
-<stop stop-color="#fff47a"/><stop offset=".5" stop-color="#ff9e26"/>
-<stop offset="1" stop-color="#d84a13"/></linearGradient></defs>
-<path d="M8 49L62 41L88 5Q93 0 110 5L106 42L163 48Q178 52 163 58L106 65L114 94L98 99L70 68L10 61Q-2 56 8 49Z" fill="url(#p)" stroke="#9d4c10" stroke-width="3"/>
-<path d="M48 47L76 45L87 28L101 28L97 47L146 52L97 57L83 54Z" fill="#b4f7ff" stroke="white" stroke-width="2"/>
-<path d="M75 43L96 43L107 13L119 15L110 47L151 52L110 59L116 89L102 89L89 59L70 55Z" fill="#ffe45c" stroke="#bb7515" stroke-width="2"/>
-<circle cx="29" cy="54" r="5" fill="#ffed75"/>
+<stop stop-color="#fff47a"/><stop offset=".4" stop-color="#ffb52b"/>
+<stop offset="1" stop-color="#e05b12"/></linearGradient></defs>
+<path d="M12 48 L66 41 L91 4 L112 5 L106 42 L160 48 Q171 51 160 57 L107 65 L114 94 L99 96 L72 67 L14 61 Q2 57 12 48Z" fill="url(#p)" stroke="#a34b10" stroke-width="3"/>
+<path d="M48 47 L76 46 L87 28 L100 27 L96 46 L146 51 L96 56 L83 54Z" fill="#a4efff" stroke="white" stroke-width="2"/>
 </svg>`);
 
-// Tiga jenis makhluk musuh yang berlainan rupa
-const enemySprites=[
-sprite(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
-<defs><linearGradient id="a"><stop stop-color="#ffc16a"/><stop offset="1" stop-color="#d71c49"/></linearGradient></defs>
-<path d="M20 42L10 15L36 29Q60 1 82 28L109 16L95 48L106 77L80 96L33 92L12 75Z" fill="url(#a)" stroke="#72153b" stroke-width="4"/>
-<path d="M30 42Q60 27 90 43L86 74L33 74Z" fill="#ffe29a"/>
-<ellipse cx="44" cy="53" rx="11" ry="14" fill="white"/>
-<ellipse cx="76" cy="53" rx="11" ry="14" fill="white"/>
-<circle cx="46" cy="55" r="5" fill="#321b40"/>
-<circle cx="74" cy="55" r="5" fill="#321b40"/>
-<path d="M37 80Q60 99 84 79" stroke="#55203b" stroke-width="5" fill="none"/>
-</svg>`),
-sprite(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
-<defs><linearGradient id="b"><stop stop-color="#b9a5ff"/><stop offset="1" stop-color="#5930c6"/></linearGradient></defs>
-<path d="M29 25L15 8L43 15L59 4L76 16L104 8L92 36L109 70L85 95H29L11 70Z" fill="url(#b)" stroke="#302071" stroke-width="4"/>
-<rect x="24" y="35" width="73" height="40" rx="17" fill="#43247a"/>
-<circle cx="45" cy="53" r="13" fill="#b5ffff"/>
-<circle cx="77" cy="53" r="13" fill="#b5ffff"/>
-<circle cx="46" cy="54" r="5" fill="#322052"/>
-<circle cx="76" cy="54" r="5" fill="#322052"/>
-<path d="M40 79Q60 92 82 78" stroke="white" stroke-width="4" fill="none"/>
-</svg>`),
-sprite(`
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
-<defs><linearGradient id="c"><stop stop-color="#aaff82"/><stop offset="1" stop-color="#148c59"/></linearGradient></defs>
-<path d="M20 42L8 19L35 29L54 7L69 27L102 16L91 45L107 76L82 95H29L12 74Z" fill="url(#c)" stroke="#126343" stroke-width="4"/>
-<ellipse cx="60" cy="58" rx="36" ry="29" fill="#168456"/>
-<circle cx="43" cy="49" r="13" fill="white"/>
-<circle cx="77" cy="49" r="13" fill="white"/>
-<circle cx="45" cy="51" r="6" fill="#163b35"/>
-<circle cx="75" cy="51" r="6" fill="#163b35"/>
-<path d="M37 77Q60 96 84 77" fill="none" stroke="#d6ff9d" stroke-width="5"/>
-</svg>`)
+const monsterSVGs=[
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
+<defs><linearGradient id="r"><stop stop-color="#ffb25a"/><stop offset="1" stop-color="#d92345"/></linearGradient></defs>
+<path d="M22 43 L12 22 L35 29 Q55 3 80 29 L106 18 L95 49 L102 78 L80 91 L35 91 L15 75Z" fill="url(#r)" stroke="#6d153e" stroke-width="4"/>
+<path d="M29 48 Q60 24 89 48 L84 73 L35 73Z" fill="#ffdf7b"/>
+<ellipse cx="43" cy="52" rx="10" ry="13" fill="white"/><ellipse cx="76" cy="52" rx="10" ry="13" fill="white"/>
+<circle cx="45" cy="54" r="5" fill="#321c48"/><circle cx="75" cy="54" r="5" fill="#321c48"/>
+<path d="M39 80 Q59 99 82 79" fill="none" stroke="#54203a" stroke-width="5"/>
+</svg>`,
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
+<defs><linearGradient id="b"><stop stop-color="#b7a0ff"/><stop offset="1" stop-color="#5933c8"/></linearGradient></defs>
+<path d="M30 25 L17 9 L43 15 L59 4 L74 16 L101 8 L91 35 L106 69 L85 94 L30 94 L12 70Z" fill="url(#b)" stroke="#302071" stroke-width="4"/>
+<rect x="25" y="35" width="70" height="38" rx="15" fill="#4b287e"/>
+<circle cx="45" cy="52" r="12" fill="#b4ffff"/><circle cx="77" cy="52" r="12" fill="#b4ffff"/>
+<circle cx="45" cy="52" r="5" fill="#322052"/><circle cx="77" cy="52" r="5" fill="#322052"/>
+<path d="M43 77 Q60 90 82 76" stroke="white" stroke-width="4" fill="none"/>
+</svg>`,
+`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 110">
+<defs><linearGradient id="g"><stop stop-color="#aaff82"/><stop offset="1" stop-color="#1a9b60"/></linearGradient></defs>
+<path d="M20 43 L8 20 L34 30 L53 8 L68 27 L100 16 L91 45 L106 75 L82 94 L30 94 L13 73Z" fill="url(#g)" stroke="#126343" stroke-width="4"/>
+<ellipse cx="60" cy="57" rx="35" ry="28" fill="#168456"/>
+<circle cx="43" cy="49" r="12" fill="white"/><circle cx="77" cy="49" r="12" fill="white"/>
+<circle cx="45" cy="51" r="6" fill="#163b35"/><circle cx="75" cy="51" r="6" fill="#163b35"/>
+<path d="M37 76 Q60 95 84 76" fill="none" stroke="#d6ff9d" stroke-width="5"/>
+</svg>`
 ];
 
-const bossSprite=sprite(`
+// PENTING: nama ini berbeza daripada array enemies!
+const enemySprites=monsterSVGs.map(makeSprite);
+
+const bossSprite=makeSprite(`
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 170">
-<defs><linearGradient id="z" x2="0" y2="1">
-<stop stop-color="#ff9be0"/><stop offset=".5" stop-color="#a52cff"/>
+<defs><linearGradient id="boss" x2="0" y2="1">
+<stop stop-color="#ff9be0"/><stop offset=".45" stop-color="#a52cff"/>
 <stop offset="1" stop-color="#3d147d"/></linearGradient></defs>
-<path d="M35 45L18 9L62 25L90 2L117 25L161 9L144 48L167 105L132 145H48L13 105Z" fill="url(#z)" stroke="#40126f" stroke-width="6"/>
-<path d="M35 52Q90 28 145 52L137 112H45Z" fill="#6227a0"/>
-<path d="M40 66L70 57L77 88L44 91ZM104 57L138 66L134 91L101 88Z" fill="#fff15c"/>
-<circle cx="60" cy="75" r="9" fill="#e9004e"/>
-<circle cx="120" cy="75" r="9" fill="#e9004e"/>
-<path d="M59 115Q90 142 122 115" stroke="white" stroke-width="7" fill="none"/>
+<path d="M35 45 L18 9 L62 25 L90 2 L117 25 L161 9 L144 48 L167 105 L132 145 L48 145 L13 105Z" fill="url(#boss)" stroke="#40126f" stroke-width="6"/>
+<path d="M35 52 Q90 28 145 52 L137 112 L45 112Z" fill="#6227a0"/>
+<path d="M40 66 L70 57 L77 88 L44 91Z M104 57 L138 66 L134 91 L101 88Z" fill="#fff15c"/>
+<circle cx="60" cy="75" r="9" fill="#e9004e"/><circle cx="120" cy="75" r="9" fill="#e9004e"/>
+<path d="M59 115 Q90 142 122 115" stroke="white" stroke-width="7" fill="none"/>
 </svg>`);
 
-function audio(){
- if(!audioContext){
-  const AC=window.AudioContext||window.webkitAudioContext;
-  if(AC)audioContext=new AC();
- }
- if(audioContext?.state==="suspended")audioContext.resume();
-}
+// =========================
+// BUNYI DAN SUARA
+// =========================
+
 function sound(freq=500,duration=.15,type="square"){
- audio();
- if(!audioContext)return;
- const o=audioContext.createOscillator();
- const g=audioContext.createGain();
- o.type=type;o.frequency.value=freq;
- o.connect(g);g.connect(audioContext.destination);
- g.gain.setValueAtTime(.08,audioContext.currentTime);
- g.gain.exponentialRampToValueAtTime(.001,audioContext.currentTime+duration);
- o.start();o.stop(audioContext.currentTime+duration);
+ try{
+  if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();
+  if(audioCtx.state==="suspended")audioCtx.resume();
+
+  let o=audioCtx.createOscillator();
+  let g=audioCtx.createGain();
+  o.connect(g);g.connect(audioCtx.destination);
+  o.type=type;
+  o.frequency.setValueAtTime(freq,audioCtx.currentTime);
+  g.gain.setValueAtTime(.09,audioCtx.currentTime);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+duration);
+  o.start();o.stop(audioCtx.currentTime+duration);
+ }catch(e){}
 }
-function boomSound(){
- sound(110,.4,"sawtooth");
- setTimeout(()=>sound(65,.35,"sawtooth"),90);
-}
-function say(text){
+
+function say(t){
  if(!window.speechSynthesis)return;
  speechSynthesis.cancel();
- const u=new SpeechSynthesisUtterance(text);
+ let u=new SpeechSynthesisUtterance(t);
  u.lang="ms-MY";u.rate=.85;
  speechSynthesis.speak(u);
 }
-function msg(t){$("message").textContent=t}
 
-function updateHUD(){
- $("hp").textContent="❤️ "+hp;
- $("score").textContent="⭐ "+score;
- $("gems").textContent="💎 "+gems;
- $("bombCount").textContent="💣 "+bombCount;
- $("level").textContent="🏆 LEVEL "+level;
+function message(t){
+ document.getElementById("message").textContent=t;
 }
 
+// =========================
+// HUD
+// =========================
+
+function updateHUD(){
+ document.getElementById("hp").textContent="❤️ "+hp;
+ document.getElementById("score").textContent="⭐ "+score;
+ document.getElementById("gems").textContent="💎 "+gems;
+ document.getElementById("bombs").textContent="💣 "+bombCount;
+ document.getElementById("level").textContent=
+ "LEVEL "+level+" - "+stages[level-1].name;
+}
+
+// =========================
+// MULA GAME
+// =========================
+
 async function startGame(){
- audio();
  try{
   if(document.documentElement.requestFullscreen)
    await document.documentElement.requestFullscreen();
@@ -333,282 +314,456 @@ async function startGame(){
    await screen.orientation.lock("landscape");
  }catch(e){}
 
+ if(window.speechSynthesis)speechSynthesis.cancel();
+
  player={x:100,y:220};
  bullets=[];enemies=[];enemyShots=[];items=[];particles=[];
- score=0;gems=0;hp=3;level=1;kills=0;
- boss=null;bombCount=3;bombCooldown=0;
- hits=0;questionOrder=[0,1,2,3,4].sort(()=>Math.random()-.5);
- active=true;paused=false;flying=false;
- shootHeld=false;joy={x:0,y:0};
- gameTime=0;lastSpawn=0;lastItem=0;
- $("startScreen").style.display="none";
- $("gameOver").style.display="none";
- $("quiz").style.display="none";
+ score=0;gems=0;hp=3;hits=0;
+ level=1;kills=0;boss=null;bossSpawned=false;
+ flying=false;bombCount=3;bombCooldown=0;
+ questionOrder=[];questionIndex=0;
+ active=true;paused=false;shootHeld=false;
+ joy={x:0,y:0};keys={};
+ lastSpawn=0;lastItem=0;lastShot=0;gameTime=0;
+ lastTime=0;
+
+ document.getElementById("startScreen").style.display="none";
+ document.getElementById("quiz").style.display="none";
+ document.getElementById("startSubtitle").textContent=
+ "🚗 TRANSFORM • 🔫 SHOOT • 💣 BOOM";
+ document.getElementById("startButton").textContent="▶ MULA BERMAIN";
+
  updateHUD();
- msg("MISI BERMULA!");
- say("Misi bermula! Selamat berjuang!");
+ message("MISI BERMULA!");
+ sound(650,.3,"sine");
+ say("Misi bermula! Kalahkan semua musuh!");
 }
+
+// =========================
+// TRANSFORM
+// =========================
 
 function transform(){
  if(!active||paused)return;
  flying=!flying;
- for(let i=0;i<25;i++)burst(player.x+40,player.y+30);
- sound(350,.3,"sawtooth");
- msg(flying?"✈️ MOD KAPAL TERBANG!":"🚗 MOD KERETA!");
- $("transformBtn").querySelector("span").textContent=flying?"✈️":"🚗";
+ for(let i=0;i<24;i++)burst(player.x+35,player.y+25);
+ sound(350,.35,"sawtooth");
+ message(flying?"✈️ MOD KAPAL TERBANG!":"🚗 MOD KERETA!");
 }
+
+// =========================
+// TEMBAKAN
+// =========================
 
 function shoot(){
  if(!active||paused||Date.now()-lastShot<230)return;
  lastShot=Date.now();
- bullets.push({x:player.x+75,y:player.y+30});
- sound(850,.08);
- setTimeout(()=>sound(620,.06),45);
+
+ bullets.push({x:player.x+75,y:player.y+30,used:false});
+ sound(850,.09);
 }
+
+// =========================
+// BOM
+// =========================
+
 function bomb(){
  if(!active||paused||bombCount<=0||Date.now()<bombCooldown)return;
- bombCount--;bombCooldown=Date.now()+1000;
- explosion(player.x+140,player.y+20);
+
+ bombCount--;
+ bombCooldown=Date.now()+1800;
+ explosion(player.x+150,player.y+20);
+
  enemies.forEach(e=>{
-  if(Math.abs(e.x-player.x)<350){
+  if(Math.abs(e.x-player.x)<360){
    e.hp-=3;
    if(e.hp<=0)killEnemy(e);
   }
  });
+
  enemies=enemies.filter(e=>!e.dead);
- enemyShots=[];
+
  if(boss){
   boss.hp-=3;
-  if(boss.hp<=0)killBoss();
+  if(boss.hp<=0)winGame();
  }
- msg("💣 BOOOOOOM!");
- sound(75,.45,"sawtooth");
+
+ enemyShots=enemyShots.filter(b=>Math.abs(b.x-player.x)>300);
+ message("💣 BOOOOOOM!");
  updateHUD();
 }
 
-// Joystick
-const joyBase=$("joystick"),stick=$("stick");
+// =========================
+// JOYSTICK
+// =========================
+
+const joyBase=document.getElementById("joystick");
+const stick=document.getElementById("stick");
 let joyPointer=null;
 
-function moveJoy(e){
- const r=joyBase.getBoundingClientRect();
+function joystickMove(e){
+ let r=joyBase.getBoundingClientRect();
  let dx=e.clientX-(r.left+r.width/2);
  let dy=e.clientY-(r.top+r.height/2);
- const max=r.width*.34,len=Math.hypot(dx,dy);
+ let max=r.width*.34;
+ let len=Math.hypot(dx,dy);
+
  if(len>max){dx=dx/len*max;dy=dy/len*max}
- joy.x=dx/max;joy.y=dy/max;
+
+ joy.x=dx/max;
+ joy.y=dy/max;
  stick.style.left=(30+joy.x*30)+"%";
  stick.style.top=(30+joy.y*30)+"%";
 }
-function stopJoy(){
- joy.x=0;joy.y=0;joyPointer=null;
- stick.style.left="30%";stick.style.top="30%";
+
+function joystickEnd(){
+ joy.x=0;joy.y=0;
+ stick.style.left="30%";
+ stick.style.top="30%";
 }
+
 joyBase.addEventListener("pointerdown",e=>{
- e.preventDefault();joyPointer=e.pointerId;
- joyBase.setPointerCapture(e.pointerId);moveJoy(e);
+ e.preventDefault();
+ joyPointer=e.pointerId;
+ joyBase.setPointerCapture(e.pointerId);
+ joystickMove(e);
 });
+
 joyBase.addEventListener("pointermove",e=>{
- if(e.pointerId===joyPointer)moveJoy(e);
+ if(e.pointerId===joyPointer)joystickMove(e);
 });
-joyBase.addEventListener("pointerup",stopJoy);
-joyBase.addEventListener("pointercancel",stopJoy);
 
-// Tembak berterusan
-$("fire").addEventListener("pointerdown",e=>{
- e.preventDefault();shootHeld=true;shoot();
+joyBase.addEventListener("pointerup",e=>{
+ if(e.pointerId===joyPointer){
+  joyPointer=null;
+  joystickEnd();
+ }
 });
+joyBase.addEventListener("pointercancel",()=>{
+ joyPointer=null;joystickEnd();
+});
+
+// =========================
+// BUTANG TELEFON
+// =========================
+
+const fireBtn=document.getElementById("fire");
+
+fireBtn.addEventListener("pointerdown",e=>{
+ e.preventDefault();
+ shootHeld=true;
+ fireBtn.setPointerCapture(e.pointerId);
+ shoot();
+});
+
 function stopFire(){shootHeld=false}
-$("fire").addEventListener("pointerup",stopFire);
-$("fire").addEventListener("pointercancel",stopFire);
-$("fire").addEventListener("lostpointercapture",stopFire);
 
-$("bomb").addEventListener("pointerdown",e=>{
+fireBtn.addEventListener("pointerup",stopFire);
+fireBtn.addEventListener("pointercancel",stopFire);
+fireBtn.addEventListener("lostpointercapture",stopFire);
+
+document.getElementById("bomb").addEventListener("pointerdown",e=>{
  e.preventDefault();bomb();
 });
-$("transformBtn").addEventListener("pointerdown",e=>{
+
+document.getElementById("transformBtn").addEventListener("pointerdown",e=>{
  e.preventDefault();transform();
 });
 
-// Keyboard untuk komputer
+// =========================
+// KEYBOARD KOMPUTER
+// =========================
+
 document.addEventListener("keydown",e=>{
- const k=e.key.toLowerCase();
- if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))e.preventDefault();
+ let k=e.key.toLowerCase();
+
+ if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))
+  e.preventDefault();
+
+ keys[k]=true;
+
  if(k===" ")shoot();
  if(k==="t")transform();
  if(k==="b")bomb();
- if(k==="arrowup"||k==="w")joy.y=-1;
- if(k==="arrowdown"||k==="s")joy.y=1;
- if(k==="arrowleft"||k==="a")joy.x=-1;
- if(k==="arrowright"||k==="d")joy.x=1;
 });
+
 document.addEventListener("keyup",e=>{
- const k=e.key.toLowerCase();
- if(k==="arrowup"||k==="arrowdown"||k==="w"||k==="s")joy.y=0;
- if(k==="arrowleft"||k==="arrowright"||k==="a"||k==="d")joy.x=0;
+ keys[e.key.toLowerCase()]=false;
 });
+
+function getMovement(){
+ let x=joy.x;
+ let y=joy.y;
+
+ if(keys.arrowleft||keys.a)x-=1;
+ if(keys.arrowright||keys.d)x+=1;
+ if(keys.arrowup||keys.w)y-=1;
+ if(keys.arrowdown||keys.s)y+=1;
+
+ let len=Math.hypot(x,y);
+ if(len>1){x/=len;y/=len}
+ return{x,y};
+}
+
+// =========================
+// LETUPAN
+// =========================
 
 function burst(x,y){
  particles.push({
-  x,y,vx:(Math.random()-.5)*8,vy:(Math.random()-.5)*8,
-  life:35,
+  x,y,vx:(Math.random()-.5)*7,
+  vy:(Math.random()-.5)*7,life:35,
   color:["#fff000","#ff3c9c","#31ffff","#8aff3c","#b56aff"][Math.floor(Math.random()*5)]
  });
 }
+
 function explosion(x,y){
  for(let i=0;i<35;i++)burst(x,y);
- boomSound();
+ sound(90,.35,"sawtooth");
+ sound(150,.25,"square");
 }
+
+// =========================
+// MUSUH
+// =========================
+
 function killEnemy(e){
  if(e.dead)return;
- e.dead=true;kills++;score+=100;
+
+ e.dead=true;
+ score+=100;
+ kills++;
  explosion(e.x,e.y);
- if(Math.random()<.7)
-  items.push({x:e.x,y:e.y,type:Math.floor(Math.random()*3)});
+
+ if(Math.random()<.65){
+  items.push({
+   x:e.x,y:e.y,
+   type:Math.floor(Math.random()*3)
+  });
+ }
 }
-function killBoss(){
- if(!boss)return;
- score+=1000;
- explosion(boss.x,boss.y);
- boss=null;
- nextLevel();
-}
+
 function spawnEnemy(){
- if(enemies.length>=6||boss)return;
+ if(enemies.length>=6||boss||level===5&&kills>=6)return;
+
+ let type=Math.floor(Math.random()*enemySprites.length);
+
  enemies.push({
-  x:930,y:35+Math.random()*390,
-  hp:3,type:Math.floor(Math.random()*enemySprites.length),
-  dead:false
+  x:930,
+  y:40+Math.random()*390,
+  baseY:40+Math.random()*390,
+  hp:3,
+  type,
+  dead:false,
+  phase:Math.random()*6
  });
 }
+
 function spawnItem(){
- items.push({x:930,y:40+Math.random()*390,type:Math.floor(Math.random()*3)});
+ items.push({
+  x:930,y:40+Math.random()*400,
+  type:Math.floor(Math.random()*3)
+ });
 }
+
 function collision(a,b,d=35){
  return Math.abs(a.x-b.x)<d&&Math.abs(a.y-b.y)<d;
 }
 
-// Soalan selepas tiga kali terkena tembakan
+// =========================
+// KENA TEMBAKAN
+// =========================
+
 function damage(){
  if(paused||!active)return;
- hp--;hits++;
- sound(120,.25,"sawtooth");
+
+ hp--;
+ hits++;
+ sound(110,.25,"sawtooth");
  updateHUD();
+
  if(hits>=3){
   showQuiz();
   return;
  }
- if(hp<=0){
-  gameOver();
-  return;
- }
- msg("AWAS! KENA TEMBAK!");
-}
-function showQuiz(){
- paused=true;shootHeld=false;
- if(questionOrder.length===0)
-  questionOrder=[0,1,2,3,4].sort(()=>Math.random()-.5);
 
- currentQuestion=questions[questionOrder.pop()];
- $("question").textContent=currentQuestion.q;
- $("feedback").textContent="";
- const box=$("answers");
+ message("AWAS! KENA TEMBAK!");
+}
+
+// =========================
+// SOALAN SOLAT
+// =========================
+
+function showQuiz(){
+ paused=true;
+ shootHeld=false;
+
+ if(questionIndex>=questionOrder.length){
+  questionOrder=[0,1,2,3,4].sort(()=>Math.random()-.5);
+  questionIndex=0;
+ }
+
+ let q=questions[questionOrder[questionIndex++]];
+
+ document.getElementById("question").textContent=q.q;
+ document.getElementById("feedback").textContent="";
+
+ let box=document.getElementById("answers");
  box.innerHTML="";
 
- currentQuestion.a.forEach((answer,i)=>{
-  const b=document.createElement("button");
+ q.a.forEach((answer,i)=>{
+  let b=document.createElement("button");
   b.textContent=["A","B","C","D"][i]+". "+answer;
+
   b.onclick=()=>{
-   if(i===currentQuestion.c){
-    $("feedback").textContent="BETUL! TAHNIAH! 🎉";
+   if(i===q.c){
+    document.getElementById("feedback").textContent=
+    "BETUL! TAHNIAH! 🎉";
+
     sound(950,.4,"sine");
-    hp=3;hits=0;
+    hp=3;
+    hits=0;
+
     setTimeout(()=>{
-     $("quiz").style.display="none";
+     document.getElementById("quiz").style.display="none";
      paused=false;
-     msg("HEBAT! TERUSKAN MISI!");
+     message("HEBAT! TERUSKAN MISI!");
      updateHUD();
-    },1000);
+    },900);
+
    }else{
-    $("feedback").textContent="SALAH! CUBA LAGI 😊";
+    document.getElementById("feedback").textContent=
+    "SALAH! CUBA LAGI 😊";
     sound(150,.3);
+    say("Jawapan salah. Cuba lagi.");
    }
   };
+
   box.appendChild(b);
  });
- $("quiz").style.display="flex";
+
+ document.getElementById("quiz").style.display="block";
  readQuestion();
 }
+
 function readQuestion(){
- say($("question").textContent+
- " Pilih jawapan A, B, C atau D.");
+ let q=document.getElementById("question").textContent;
+ let answers=[...document.querySelectorAll("#answers button")]
+  .map(b=>b.textContent).join(". ");
+
+ say(q+". Pilih jawapan A, B, C atau D. "+answers);
 }
 
-function gameOver(){
- active=false;paused=true;shootHeld=false;
- $("gameOver").style.display="flex";
- $("finalScore").textContent="SKOR AKHIR: "+score;
- say("Permainan tamat. Cuba lagi!");
-}
+// =========================
+// PERINGKAT SETERUSNYA
+// =========================
 
 function nextLevel(){
- if(level<5){
-  level++;kills=0;
-  enemies=[];enemyShots=[];bullets=[];boss=null;
-  bombCount=Math.min(5,bombCount+1);
-  msg("TAHNIAH! PERINGKAT "+level+"!");
-  say("Tahniah! Peringkat "+level);
- }else{
-  active=false;shootHeld=false;
-  $("gameOver").style.display="flex";
-  $("gameOver").querySelector("h1").textContent="🏆 ANDA JUARA!";
-  $("finalScore").textContent="SKOR AKHIR: "+score;
-  say("Tahniah! Anda berjaya menamatkan semua peringkat!");
- }
+ if(level>=5)return;
+
+ level++;
+ kills=0;
+ enemies=[];
+ enemyShots=[];
+ bullets=[];
+ boss=null;
+ bossSpawned=false;
+ lastSpawn=performance.now();
+
+ message("TAHNIAH! PERINGKAT "+level+"!");
+ sound(700,.5,"sine");
+ say("Tahniah! Peringkat "+level);
  updateHUD();
 }
 
-// Latar belakang
+// =========================
+// MENANG
+// =========================
+
+function winGame(){
+ if(!active)return;
+
+ if(boss){
+  explosion(boss.x,boss.y);
+  score+=1000;
+  boss=null;
+ }
+
+ active=false;
+ shootHeld=false;
+ paused=false;
+
+ message("🏆 ANDA JUARA!");
+ sound(1000,.6,"sine");
+ say("Tahniah! Anda juara! Semua peringkat selesai!");
+
+ document.getElementById("startScreen").style.display="flex";
+ document.getElementById("startSubtitle").textContent=
+ "🏆 TAHNIAH! SKOR AKHIR: "+score;
+ document.getElementById("startButton").textContent="MAIN SEMULA";
+}
+
+// =========================
+// LUKIS LATAR
+// =========================
+
 function background(){
- const g=ctx.createLinearGradient(0,0,0,500);
- g.addColorStop(0,"#1fcaff");
+ let g=ctx.createLinearGradient(0,0,0,500);
+ g.addColorStop(0,"#21caff");
  g.addColorStop(.65,"#b1f6ff");
  g.addColorStop(1,"#fff0ad");
- ctx.fillStyle=g;ctx.fillRect(0,0,900,500);
+ ctx.fillStyle=g;
+ ctx.fillRect(0,0,900,500);
 
  // Matahari
  ctx.fillStyle="#fff34b";
- ctx.beginPath();ctx.arc(770,75,43,0,7);ctx.fill();
+ ctx.beginPath();
+ ctx.arc(770,75,43,0,7);
+ ctx.fill();
 
  // Gunung
  ctx.fillStyle="#a18ae1";
  ctx.beginPath();
- ctx.moveTo(0,330);ctx.lineTo(170,125);
- ctx.lineTo(340,340);ctx.lineTo(500,170);
- ctx.lineTo(720,345);ctx.lineTo(900,190);
- ctx.lineTo(900,440);ctx.lineTo(0,440);ctx.fill();
+ ctx.moveTo(0,330);
+ ctx.lineTo(170,125);
+ ctx.lineTo(340,340);
+ ctx.lineTo(500,170);
+ ctx.lineTo(720,345);
+ ctx.lineTo(900,190);
+ ctx.lineTo(900,420);
+ ctx.lineTo(0,420);
+ ctx.fill();
 
- // Pokok dan bandar
+ // Bandar
  for(let i=0;i<10;i++){
-  const x=i*100,h=65+(i*37)%100;
+  let x=i*100;
+  let h=65+(i*37)%100;
+
   ctx.fillStyle=["#ff77b7","#ffca52","#67caff","#8f72df"][i%4];
   ctx.fillRect(x,420-h,72,h);
+
   ctx.fillStyle="#fff5a2";
-  for(let y=430-h;y<405;y+=22)
-   for(let z=x+12;z<x+65;z+=23)
+  for(let y=430-h;y<405;y+=22){
+   for(let z=x+12;z<x+65;z+=23){
     ctx.fillRect(z,y,10,12);
+   }
+  }
  }
 
- // Jalan raya
- ctx.fillStyle="#515d85";ctx.fillRect(0,440,900,60);
- ctx.fillStyle="white";
- for(let x=0;x<900;x+=100)ctx.fillRect(x,468,45,6);
+ // Jalan
+ ctx.fillStyle="#515d85";
+ ctx.fillRect(0,440,900,60);
 
- // Awan
+ ctx.fillStyle="white";
+ for(let x=0;x<900;x+=100)
+  ctx.fillRect(x,468,45,6);
+
+ // Awan bergerak
  ctx.fillStyle="white";
  for(let i=0;i<4;i++){
-  const x=(i*245+60+gameTime*12)%1000-60;
-  const y=75+i%2*65;
+  let x=(i*245+60+gameTime*30)%1000-60;
+  let y=75+i%2*65;
+
   ctx.beginPath();
   ctx.arc(x,y,23,0,7);
   ctx.arc(x+27,y-10,30,0,7);
@@ -617,50 +772,69 @@ function background(){
  }
 }
 
+// =========================
+// PAPAR PERMAINAN
+// =========================
+
 function draw(){
  background();
 
- // Pemain
- const vehicle=flying?plane:car;
- if(vehicle.complete&&vehicle.naturalWidth)
+ let vehicle=flying?plane:car;
+
+ if(vehicle.complete&&vehicle.naturalWidth){
   ctx.drawImage(vehicle,player.x,player.y,105,65);
+ }
 
  // Peluru pemain
  bullets.forEach(b=>{
   ctx.save();
-  ctx.shadowBlur=16;ctx.shadowColor="#ff7200";
+  ctx.shadowBlur=16;
+  ctx.shadowColor="#ff7200";
   ctx.fillStyle="#fff400";
-  ctx.beginPath();ctx.ellipse(b.x,b.y,15,5,0,0,7);ctx.fill();
+  ctx.beginPath();
+  ctx.ellipse(b.x,b.y,15,5,0,0,Math.PI*2);
+  ctx.fill();
   ctx.restore();
  });
 
- // Musuh dan nyawa musuh
+ // Musuh
  enemies.forEach(e=>{
-  const img=enemySprites[e.type];
-  if(img.complete&&img.naturalWidth)
+  let img=enemySprites[e.type];
+
+  if(img.complete&&img.naturalWidth){
    ctx.drawImage(img,e.x,e.y,78,78);
-  ctx.fillStyle="#ff3434";ctx.fillRect(e.x,e.y-9,75,7);
-  ctx.fillStyle="#53f65d";ctx.fillRect(e.x,e.y-9,75*e.hp/3,7);
+  }
+
+  ctx.fillStyle="#ff3434";
+  ctx.fillRect(e.x,e.y-9,75,7);
+  ctx.fillStyle="#53f65d";
+  ctx.fillRect(e.x,e.y-9,75*e.hp/3,7);
  });
 
- // Harta karun
+ // Harta
  items.forEach(t=>{
   ctx.font="35px Arial";
   ctx.fillText(["🪙","💎","🦪"][t.type],t.x,t.y);
  });
 
- // Serangan musuh
+ // Peluru musuh
  enemyShots.forEach(b=>{
-  ctx.font="23px Arial";ctx.fillText("🔥",b.x,b.y);
+  ctx.font="23px Arial";
+  ctx.fillText("🔥",b.x,b.y);
  });
 
  // Boss
- if(boss){
-  if(bossSprite.complete&&bossSprite.naturalWidth)
-   ctx.drawImage(bossSprite,boss.x,boss.y,160,150);
-  ctx.fillStyle="#e92743";ctx.fillRect(boss.x,boss.y-14,150,10);
-  ctx.fillStyle="#4bfa65";ctx.fillRect(boss.x,boss.y-14,150*boss.hp/15,10);
-  ctx.fillStyle="white";ctx.font="bold 17px Arial";
+ if(boss&&bossSprite.complete&&bossSprite.naturalWidth){
+  ctx.drawImage(bossSprite,boss.x,boss.y,160,150);
+
+  ctx.fillStyle="#e92743";
+  ctx.fillRect(boss.x,boss.y-14,150,10);
+
+  ctx.fillStyle="#4bfa65";
+  ctx.fillRect(boss.x,boss.y-14,150*boss.hp/15,10);
+
+  ctx.fillStyle="white";
+  ctx.font="bold 17px Arial";
   ctx.fillText("BOSS",boss.x+50,boss.y-20);
  }
 
@@ -668,61 +842,89 @@ function draw(){
  particles.forEach(p=>{
   ctx.globalAlpha=Math.max(0,p.life/35);
   ctx.fillStyle=p.color;
-  ctx.beginPath();ctx.arc(p.x,p.y,4,0,7);ctx.fill();
+  ctx.beginPath();
+  ctx.arc(p.x,p.y,4,0,Math.PI*2);
+  ctx.fill();
   ctx.globalAlpha=1;
  });
 }
 
+// =========================
+// UPDATE GAME
+// =========================
+
 function update(dt){
  if(!active||paused)return;
+
  gameTime+=dt;
 
- // Kawalan pemain
- player.x+=joy.x*260*dt;
- player.y+=joy.y*260*dt;
+ // Gerakan
+ let movement=getMovement();
+
+ player.x+=movement.x*260*dt;
+ player.y+=movement.y*260*dt;
+
  player.x=Math.max(0,Math.min(790,player.x));
  player.y=Math.max(0,Math.min(425,player.y));
 
+ // Tembakan automatik
  if(shootHeld)shoot();
 
- // Peluru pemain
  bullets.forEach(b=>b.x+=650*dt);
 
- // Musuh
- const diff=stages[level-1];
+ let diff=stages[level-1];
+
+ // Gerakan musuh
  enemies.forEach(e=>{
-  e.x-=diff.speed*60*dt;
-  if(Math.random()<diff.damage*60*dt)
-   enemyShots.push({x:e.x,y:e.y+35});
+  e.x-=diff.speed*dt;
+  e.y=e.baseY+Math.sin(gameTime*2+e.phase)*12;
+
+  if(Math.random()<diff.fire*dt){
+   enemyShots.push({x:e.x,y:e.y+35,used:false});
+  }
  });
 
- // Tembakan mengenai musuh
+ // Peluru terkena musuh
  bullets.forEach(b=>{
   enemies.forEach(e=>{
    if(!b.used&&!e.dead&&collision(b,{x:e.x+38,y:e.y+38},43)){
-    b.used=true;e.hp--;
+    b.used=true;
+    e.hp--;
     sound(230,.08);
+
     if(e.hp<=0)killEnemy(e);
    }
   });
  });
+
  bullets=bullets.filter(b=>b.x<930&&!b.used);
  enemies=enemies.filter(e=>!e.dead&&e.x>-100);
 
  // Boss terakhir
- if(level===5&&kills>=6&&!boss){
+ if(level===5&&kills>=6&&!boss&& !bossSpawned){
+  bossSpawned=true;
+  enemies=[];
   boss={x:730,y:170,hp:15};
   say("Boss terakhir datang!");
+  message("⚠️ BOSS TERAKHIR!");
  }
+
  if(boss){
   boss.x=Math.max(680,boss.x-10*dt);
   boss.y=160+Math.sin(gameTime*2)*25;
-  if(Math.random()<.025)
-   enemyShots.push({x:boss.x,y:boss.y+65});
+
+  if(Math.random()<.8*dt){
+   enemyShots.push({x:boss.x,y:boss.y+65,used:false});
+  }
+
   bullets.forEach(b=>{
    if(!b.used&&collision(b,{x:boss.x+70,y:boss.y+70},85)){
-    b.used=true;boss.hp--;
-    if(boss&&boss.hp<=0)killBoss();
+    b.used=true;
+    boss.hp--;
+
+    if(boss.hp<=0){
+     winGame();
+    }
    }
   });
  }
@@ -730,19 +932,24 @@ function update(dt){
  // Peluru musuh
  enemyShots.forEach(b=>{
   b.x-=300*dt;
+
   if(!b.used&&collision(b,{x:player.x+45,y:player.y+30},35)){
-   b.used=true;damage();
+   b.used=true;
+   damage();
   }
  });
+
  enemyShots=enemyShots.filter(b=>b.x>0&&!b.used);
 
- // Kutip harta
+ // Harta karun
  items.forEach(t=>t.x-=120*dt);
+
  items=items.filter(t=>{
   if(collision(t,{x:player.x+45,y:player.y+30},42)){
    score+=t.type===1?50:20;
    gems++;
    sound(1100,.12,"sine");
+
    for(let i=0;i<12;i++)burst(t.x,t.y);
    return false;
   }
@@ -751,36 +958,52 @@ function update(dt){
 
  // Partikel
  particles.forEach(p=>{
-  p.x+=p.vx;p.y+=p.vy;p.life-=60*dt;
+  p.x+=p.vx;
+  p.y+=p.vy;
+  p.life-=60*dt;
  });
+
  particles=particles.filter(p=>p.life>0);
 
- // Pertukaran peringkat
- if(level<5&&kills>=6)nextLevel();
+ // Tamat peringkat 1 hingga 4
+ if(level<5&&kills>=6){
+  nextLevel();
+ }
 
  updateHUD();
 }
 
+// =========================
+// GAME LOOP
+// =========================
+
 function loop(now){
- const dt=Math.min((now-lastTime)/1000||0,.04);
+ let dt=Math.min((now-lastTime)/1000||0,.04);
  lastTime=now;
 
  if(active&&!paused){
-  const spawnRate=Math.max(450,stages[level-1].rate);
-  if(now-lastSpawn>spawnRate){
-   spawnEnemy();lastSpawn=now;
+  let diff=stages[level-1];
+
+  if(now-lastSpawn>diff.interval){
+   spawnEnemy();
+   lastSpawn=now;
   }
+
   if(now-lastItem>3000){
-   spawnItem();lastItem=now;
+   spawnItem();
+   lastItem=now;
   }
  }
+
  update(dt);
  draw();
+
  requestAnimationFrame(loop);
 }
 
 updateHUD();
 requestAnimationFrame(loop);
+
 </script>
 </body>
 </html>
