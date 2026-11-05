@@ -51,20 +51,21 @@ align-items:center;justify-content:center;padding:12px;
 background:#090b20dd;text-align:center
 }
 .panel{
-width:min(440px,90vw);max-height:85dvh;overflow:auto;
-padding:14px;border:3px solid #fff36a;border-radius:20px;
+width:min(440px,90vw);max-height:88dvh;overflow:auto;
+padding:16px;border:3px solid #fff36a;border-radius:20px;
 background:linear-gradient(145deg,#ff45a4,#6939e7,#12a7e0);
 box-shadow:0 0 30px #ffffff55
 }
 .panel h1{font-size:clamp(20px,4vw,28px);color:#fff34c;text-shadow:2px 3px #9e247d}
 .panel button{
-width:100%;padding:11px;margin-top:8px;
+width:100%;padding:12px;margin-top:8px;
 border:2px solid white;border-radius:12px;
 background:#fff23b;color:#512080;font-size:16px;font-weight:bold
 }
-.answerBtn{background:#fff!important}
-#quizQuestion{font-size:clamp(14px,2.5vw,19px);font-weight:bold;margin:12px 0;line-height:1.4}
-#quizInfo{font-size:12px}
+.answerBtn{background:white!important;color:#512080}
+#quizQuestion{font-size:clamp(14px,2.5vw,19px);font-weight:bold;margin:15px 0;line-height:1.5}
+#quizInfo{font-size:13px}
+#quizProgress{font-weight:bold;color:#fff36a}
 #startScreen{
 position:fixed;z-index:20;inset:0;display:flex;
 flex-direction:column;justify-content:center;align-items:center;
@@ -85,7 +86,6 @@ display:none;position:fixed;inset:0;z-index:100;
 background:#17102f;align-items:center;justify-content:center;
 text-align:center;padding:25px;font-size:23px
 }
-#quizCounter{font-weight:bold;color:#fff36a}
 @media(orientation:portrait){
 #rotateMessage{display:flex}
 }
@@ -120,7 +120,7 @@ text-align:center;padding:25px;font-size:23px
 <div id="startScreen">
 <h1>🌈 RAINBOW TRANSFORMER HERO 🌈</h1>
 <h2>🚗 TRANSFORM • 🔫 SHOOT • 💣 BOOM</h2>
-<p>5 STAGE • CABARAN SOLAT • BOSS TERAKHIR</p>
+<p>5 STAGE • 25 SOALAN • BOSS TERAKHIR</p>
 <p>50 • 100 • 200 • 300 • 400 MUSUH</p>
 <button id="startButton">▶ MULA BERMAIN</button>
 <p>Gunakan telefon secara landscape.</p>
@@ -130,8 +130,8 @@ text-align:center;padding:25px;font-size:23px
 <div class="panel">
 <h1>📖 UJIAN PAHLAWAN</h1>
 <h3 id="quizStage">STAGE 1</h3>
-<p id="quizInfo">Jawab dengan betul untuk meneruskan perjuangan!</p>
-<p id="quizCounter">SOALAN 1 / 5</p>
+<p id="quizInfo">Jawab lima soalan dengan betul untuk memulakan perjuangan!</p>
+<p id="quizProgress">SOALAN 1 / 5</p>
 <div id="quizQuestion"></div>
 <div id="answers"></div>
 <p id="quizFeedback"></p>
@@ -154,9 +154,9 @@ text-align:center;padding:25px;font-size:23px
 <script>
 "use strict";
 
-// ==================================================
+// ============================================
 // ASAS PERMAINAN
-// ==================================================
+// ============================================
 
 const canvas=document.getElementById("game");
 const ctx=canvas.getContext("2d");
@@ -168,28 +168,33 @@ let bullets=[],enemies=[],enemyShots=[],items=[],particles=[];
 let score=0,gems=0,hp=3,kills=0,level=1;
 let bombCount=3;
 
-let active=false,paused=false;
+let active=false;
+let paused=true;
+let introDone=false;
 let flying=false;
-let boss=null,bossSpawned=false;
+
+let boss=null;
+let bossSpawned=false;
 
 let bulletType=0;
-let shootHeld=false,lastShot=0;
-let lastSpawn=0,lastItem=0;
-let gameTime=0,lastTime=0;
+let shootHeld=false;
+let lastShot=0;
+let lastSpawn=0;
+let lastItem=0;
+let gameTime=0;
+let lastTime=0;
 
-let joy={x:0,y:0},keys={};
+let joy={x:0,y:0};
+let keys={};
 
 let shieldUntil=0;
 let hitCount=0;
 let lastHit=0;
 
 let audioCtx=null;
-let introDone=false;
-
 let questionIndex=0;
 let currentQuestion=null;
-let quizSequence=[];
-let quizAnswered=false;
+let stageQuizActive=false;
 
 const PLAYER_SPEED=430;
 const MAX_HP=3;
@@ -205,51 +210,57 @@ const stages=[
 {name:"BOSS TERAKHIR",speed:145,fire:.045,interval:550}
 ];
 
-// ==================================================
-// BANK SOALAN - 5 SOALAN UNIK SETIAP STAGE
-// ==================================================
+// ============================================
+// 25 SOALAN UNIK - 5 SETIAP STAGE
+// ============================================
 
 const questions=[
+
 [
-{q:"Apakah syarat utama sebelum seseorang menunaikan solat?",a:["Mempunyai wuduk","Memakai kasut","Makan dahulu"],c:0},
-{q:"Sengaja bercakap perkara biasa ketika solat. Apakah hukumnya?",a:["Solat sah","Solat batal","Solat menjadi sunat"],c:1},
-{q:"Menutup aurat ketika solat merupakan apa?",a:["Syarat sah","Perkara harus","Perkara makruh"],c:0},
-{q:"Apakah yang berlaku jika seseorang sengaja makan ketika solat?",a:["Solat batal","Solat sah","Solat bertambah pahala"],c:0},
-{q:"Ke arah manakah umat Islam menghadap ketika solat?",a:["Matahari terbit","Kiblat","Mana-mana arah"],c:1}
+{q:"Apakah syarat utama sebelum seseorang menunaikan solat?",a:["Berwuduk jika berhadas kecil","Makan dahulu","Tidur dahulu","Memakai kasut"],c:0},
+{q:"Berapakah jumlah solat fardu sehari semalam?",a:["Tiga","Empat","Lima","Enam"],c:2},
+{q:"Apakah nama solat fardu yang dilakukan pada waktu subuh?",a:["Solat Isyak","Solat Subuh","Solat Asar","Solat Maghrib"],c:1},
+{q:"Ke arah manakah umat Islam menghadap ketika solat?",a:["Matahari terbit","Gunung","Kaabah","Laut"],c:2},
+{q:"Apakah yang perlu dilakukan sebelum memulakan solat?",a:["Berniat","Berlari","Makan","Bermain"],c:0}
 ],
+
 [
-{q:"Berdiri bagi orang yang mampu dalam solat fardu ialah?",a:["Rukun solat","Perkara makruh","Perkara harus"],c:0},
-{q:"Apakah bacaan yang menjadi rukun dalam setiap rakaat?",a:["Doa tidur","Al-Fatihah","Doa makan"],c:1},
-{q:"Adakah doa iftitah termasuk rukun solat?",a:["Ya","Tidak"],c:1},
-{q:"Rukuk merupakan salah satu daripada apa?",a:["Rukun solat","Syarat pakaian","Perkara luar solat"],c:0},
-{q:"Berapakah bilangan sujud dalam satu rakaat?",a:["Satu","Dua","Tiga"],c:1}
+{q:"Berapakah rakaat solat Zohor?",a:["Dua","Tiga","Empat","Lima"],c:2},
+{q:"Apakah bacaan yang wajib dibaca dalam setiap rakaat solat?",a:["Doa makan","Al-Fatihah","Doa tidur","Selawat sahaja"],c:1},
+{q:"Apakah perbuatan selepas rukuk?",a:["Sujud","Iktidal","Duduk tahiyat","Salam"],c:1},
+{q:"Berapakah rakaat solat Maghrib?",a:["Dua","Tiga","Empat","Lima"],c:1},
+{q:"Apakah nama perbuatan meletakkan dahi ke tempat sujud?",a:["Rukuk","Iktidal","Sujud","Qiam"],c:2}
 ],
+
 [
-{q:"Apakah jenis air yang boleh digunakan untuk berwuduk?",a:["Air mutlak","Air kopi","Air berwarna cat"],c:0},
-{q:"Membasuh muka termasuk dalam perkara apa ketika wuduk?",a:["Rukun wuduk","Perkara membatalkan wuduk","Perkara tidak perlu"],c:0},
-{q:"Apakah hukum berwuduk tanpa niat?",a:["Sah","Tidak sah","Sunat"],c:1},
-{q:"Ketika membasuh tangan, sehingga manakah had basuhan?",a:["Hingga siku","Hingga bahu","Hingga pergelangan sahaja"],c:0},
-{q:"Jika terdapat penghalang air pada kulit anggota wuduk, apakah kesannya?",a:["Wuduk tetap sah","Wuduk boleh tidak sah","Wuduk menjadi sunat"],c:1}
+{q:"Apakah maksud wuduk?",a:["Bersuci menggunakan air pada anggota tertentu","Mandi di sungai","Mencuci pakaian","Membasuh kasut"],c:0},
+{q:"Anggota manakah yang dibasuh ketika mengambil wuduk?",a:["Muka","Belakang badan sahaja","Kasut","Baju"],c:0},
+{q:"Apakah yang membatalkan wuduk?",a:["Membaca al-Quran","Tidur nyenyak","Berzikir","Bersedekah"],c:1},
+{q:"Apakah jenis air yang boleh digunakan untuk berwuduk?",a:["Air mutlak","Air kopi","Air sirap","Air minyak"],c:0},
+{q:"Apakah yang perlu dilakukan jika tiada air dan memenuhi syarat tayamum?",a:["Tayamum","Tidak bersuci","Mandi wajib","Membasuh kasut"],c:0}
 ],
+
 [
-{q:"Berapakah rakaat solat Subuh?",a:["Dua","Tiga","Empat"],c:0},
-{q:"Berapakah rakaat solat Zohor?",a:["Dua","Tiga","Empat"],c:2},
-{q:"Berapakah rakaat solat Asar?",a:["Dua","Tiga","Empat"],c:2},
-{q:"Berapakah rakaat solat Maghrib?",a:["Dua","Tiga","Empat"],c:1},
-{q:"Berapakah rakaat solat Isyak?",a:["Dua","Tiga","Empat"],c:2}
+{q:"Berapakah rakaat solat Asar?",a:["Dua","Tiga","Empat","Lima"],c:2},
+{q:"Apakah nama solat yang mempunyai tiga rakaat?",a:["Subuh","Maghrib","Zohor","Asar"],c:1},
+{q:"Bilakah waktu solat Isyak bermula?",a:["Selepas masuk waktunya pada malam hari","Waktu tengah hari","Waktu matahari terbit","Sebelum Subuh"],c:0},
+{q:"Apakah nama solat sunat yang dilakukan sebelum atau selepas solat fardu?",a:["Solat rawatib","Solat jenazah sahaja","Solat gerhana sahaja","Solat istisqa sahaja"],c:0},
+{q:"Apakah yang dilakukan pada akhir solat untuk mengakhirinya?",a:["Rukuk","Salam","Sujud pertama","Takbiratul ihram"],c:1}
 ],
+
 [
-{q:"Apakah hukum membaca al-Fatihah dalam solat?",a:["Rukun","Harus","Makruh"],c:0},
-{q:"Apakah hukum membaca doa iftitah?",a:["Rukun","Sunat","Haram"],c:1},
-{q:"Apakah hukum makan dengan sengaja ketika solat?",a:["Sunat","Harus","Membatalkan solat"],c:2},
-{q:"Apakah yang patut dilakukan apabila terlupa bilangan rakaat?",a:["Terus berhenti","Mengikut panduan hukum sujud sahwi","Makan dahulu"],c:1},
-{q:"Apakah tujuan menjaga kebersihan pakaian ketika solat?",a:["Memenuhi syarat suci daripada najis","Supaya kelihatan bergaya sahaja","Supaya solat lebih pendek"],c:0}
+{q:"Apakah hukum sengaja makan ketika sedang solat?",a:["Membatalkan solat","Menambah pahala","Sunat","Harus"],c:0},
+{q:"Apakah maksud khusyuk dalam solat?",a:["Memberi tumpuan dan ketenangan","Bercakap dengan kawan","Melihat telefon","Bermain"],c:0},
+{q:"Apakah nama solat yang dilakukan ketika berlaku gerhana?",a:["Solat Gerhana","Solat Dhuha","Solat Witir","Solat Tahajud"],c:0},
+{q:"Apakah tujuan utama kita mendirikan solat?",a:["Beribadah kepada Allah","Menunjuk-nunjuk","Bersenam sahaja","Mengisi masa lapang"],c:0},
+{q:"Apakah tindakan yang baik selepas selesai menunaikan solat?",a:["Berzikir dan berdoa","Mengganggu orang","Membuang sampah","Bergaduh"],c:0}
 ]
+
 ];
 
-// ==================================================
-// AUDIO - KESAN TEMBAKAN DAN BOM
-// ==================================================
+// ============================================
+// AUDIO - TEMBAKAN DAN LETUPAN
+// ============================================
 
 function initAudio(){
 try{
@@ -268,10 +279,13 @@ if(!audioCtx)return;
 const o=audioCtx.createOscillator();
 const g=audioCtx.createGain();
 
+o.connect(g);
+g.connect(audioCtx.destination);
+
 o.type=type;
 o.frequency.setValueAtTime(freq,audioCtx.currentTime);
 
-if(endFreq){
+if(endFreq!==null){
 o.frequency.exponentialRampToValueAtTime(
 Math.max(1,endFreq),audioCtx.currentTime+duration
 );
@@ -282,20 +296,30 @@ g.gain.exponentialRampToValueAtTime(
 .001,audioCtx.currentTime+duration
 );
 
-o.connect(g);
-g.connect(audioCtx.destination);
-
 o.start();
 o.stop(audioCtx.currentTime+duration);
 }catch(e){}
 }
 
-function noise(duration=.3,volume=.12,filterFreq=900){
+function sound(freq=500,duration=.15,type="square"){
+tone(freq,duration,type,.07);
+}
+
+function shootSound(){
+tone(700,.08,"sawtooth",.045,180);
+tone(1200,.045,"square",.025,500);
+}
+
+function explosionSound(){
+tone(110,.55,"sawtooth",.16,35);
+tone(65,.7,"triangle",.12,25);
+tone(240,.28,"square",.055,45);
+
 try{
 initAudio();
 if(!audioCtx)return;
 
-const length=Math.floor(audioCtx.sampleRate*duration);
+const length=Math.floor(audioCtx.sampleRate*.45);
 const buffer=audioCtx.createBuffer(1,length,audioCtx.sampleRate);
 const data=buffer.getChannelData(0);
 
@@ -303,54 +327,32 @@ for(let i=0;i<length;i++){
 data[i]=(Math.random()*2-1)*(1-i/length);
 }
 
-const source=audioCtx.createBufferSource();
-const filter=audioCtx.createBiquadFilter();
+const noise=audioCtx.createBufferSource();
 const gain=audioCtx.createGain();
+const filter=audioCtx.createBiquadFilter();
 
-source.buffer=buffer;
+noise.buffer=buffer;
 filter.type="lowpass";
-filter.frequency.value=filterFreq;
+filter.frequency.value=850;
 
-gain.gain.setValueAtTime(volume,audioCtx.currentTime);
-gain.gain.exponentialRampToValueAtTime(
-.001,audioCtx.currentTime+duration
-);
-
-source.connect(filter);
+noise.connect(filter);
 filter.connect(gain);
 gain.connect(audioCtx.destination);
 
-source.start();
-source.stop(audioCtx.currentTime+duration);
+gain.gain.setValueAtTime(.45,audioCtx.currentTime);
+gain.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.45);
+
+noise.start();
 }catch(e){}
 }
 
-function shootSound(){
-tone(180,.09,"sawtooth",.11,65);
-tone(850,.055,"square",.045,300);
-noise(.045,.035,2400);
-}
-
-function bombSound(){
-noise(.85,.25,700);
-tone(95,.65,"sawtooth",.18,28);
-tone(55,.8,"triangle",.16,18);
-
-setTimeout(()=>noise(.35,.13,400),100);
-setTimeout(()=>tone(75,.3,"sawtooth",.08,25),180);
-}
-
-function hitSound(){
-tone(160,.16,"sawtooth",.1,60);
-noise(.12,.06,600);
-}
-
-function sound(freq=500,duration=.15,type="square"){
-tone(freq,duration,type,.08);
-}
+// ============================================
+// SUARA UCAPAN
+// ============================================
 
 function say(text){
 return new Promise(resolve=>{
+
 if(!window.speechSynthesis){
 setTimeout(resolve,1500);
 return;
@@ -360,7 +362,7 @@ speechSynthesis.cancel();
 
 const u=new SpeechSynthesisUtterance(text);
 u.lang="ms-MY";
-u.rate=.85;
+u.rate=.88;
 u.pitch=1;
 
 let done=false;
@@ -375,7 +377,9 @@ u.onend=finish;
 u.onerror=finish;
 
 speechSynthesis.speak(u);
-setTimeout(finish,15000);
+
+setTimeout(finish,18000);
+
 });
 }
 
@@ -383,14 +387,17 @@ function message(t){
 document.getElementById("message").textContent=t;
 }
 
-// ==================================================
-// INTRO - UCAPAN HANYA SEKALI
-// ==================================================
+// ============================================
+// INTRO - UCAPAN UTAMA SEKALI SAHAJA
+// ============================================
 
 async function stageIntro(){
+
 if(!active)return;
 
 paused=true;
+stageQuizActive=false;
+
 enemies=[];
 enemyShots=[];
 bullets=[];
@@ -398,57 +405,183 @@ boss=null;
 bossSpawned=false;
 
 if(!introDone){
+
 introDone=true;
 
 message("🌟 WAHAl PAHLAWAN!");
 
 await say(
-"Wahai pahlawan-pahlawan sekalian! Mulakan langkahmu dengan Bismillah. Perjalanan ini memerlukan keberanian, kesabaran dan kebijaksanaan. Gunakan senjata dengan bijak, lindungi dirimu dan jawab cabaran ilmu dengan betul. Semoga perjuanganmu diberkati. Ayuh, kita mulakan!"
+"Wahai pahlawan-pahlawan sekalian! Mulakan langkahmu dengan Bismillah. Ingatlah bahawa setiap perjuangan memerlukan kesabaran, keberanian dan semangat yang tinggi. Jawablah soalan dengan teliti, lindungi diri daripada serangan musuh dan teruskan perjuangan sehingga berjaya. Semoga usaha kita diberkati. Ayuh, pahlawan! Mari kita mulakan cabaran Rainbow Transformer Hero!"
 );
+
 }
 
 if(!active)return;
 
-paused=false;
-lastSpawn=performance.now();
+await startStageQuiz();
 
-message("⚔️ STAGE "+level+" BERMULA! KALAHKAN "+targets[level-1]+" MUSUH!");
-
-tone(700,.3,"sine");
 }
 
-// ==================================================
+// ============================================
+// KUIZ 5 SOALAN SETIAP STAGE
+// ============================================
+
+function startStageQuiz(){
+
+if(!active)return;
+
+paused=true;
+stageQuizActive=true;
+questionIndex=0;
+
+document.getElementById("quizScreen").style.display="flex";
+
+showQuestion();
+}
+
+function showQuestion(){
+
+const list=questions[level-1];
+
+if(questionIndex>=5){
+finishStageQuiz();
+return;
+}
+
+currentQuestion=list[questionIndex];
+
+document.getElementById("quizStage").textContent="STAGE "+level;
+
+document.getElementById("quizProgress").textContent=
+"SOALAN "+(questionIndex+1)+" / 5";
+
+document.getElementById("quizQuestion").textContent=
+currentQuestion.q;
+
+document.getElementById("quizFeedback").textContent="";
+
+const box=document.getElementById("answers");
+box.innerHTML="";
+
+currentQuestion.a.forEach((answer,i)=>{
+
+const btn=document.createElement("button");
+
+btn.className="answerBtn";
+btn.textContent=answer;
+
+btn.onclick=()=>checkAnswer(i);
+
+box.appendChild(btn);
+
+});
+
+say(currentQuestion.q);
+}
+
+function checkAnswer(index){
+
+if(!stageQuizActive)return;
+
+const feedback=document.getElementById("quizFeedback");
+
+if(index===currentQuestion.c){
+
+sound(950,.25,"sine");
+
+feedback.textContent="✅ ALHAMDULILLAH! JAWAPAN BETUL!";
+
+document.getElementById("answers").innerHTML="";
+
+say("Alhamdulillah! Jawapan betul!");
+
+questionIndex++;
+
+setTimeout(()=>{
+
+if(!active)return;
+
+if(questionIndex>=5){
+finishStageQuiz();
+}else{
+showQuestion();
+}
+
+},900);
+
+}else{
+
+sound(180,.3,"sawtooth");
+
+feedback.textContent=
+"❌ BELUM TEPAT! CUBA LAGI, PAHLAWAN!";
+
+say("Belum tepat. Cuba fikirkan semula dan jawab sekali lagi.");
+
+}
+
+}
+
+function finishStageQuiz(){
+
+stageQuizActive=false;
+
+document.getElementById("quizScreen").style.display="none";
+
+if(!active)return;
+
+paused=false;
+
+lastSpawn=performance.now();
+lastItem=performance.now();
+
+message(
+"⚔️ STAGE "+level+" BERMULA! KALAHKAN "+targets[level-1]+" MUSUH!"
+);
+
+sound(700,.3,"sine");
+
+}
+
+// ============================================
 // HUD
-// ==================================================
+// ============================================
 
 function updateHUD(){
+
 document.getElementById("hp").textContent="❤️ "+hp;
 document.getElementById("score").textContent="⭐ "+score;
 document.getElementById("gems").textContent="💎 "+gems;
 document.getElementById("bombs").textContent="💣 "+bombCount;
+
 document.getElementById("level").textContent="🏆 STAGE "+level;
+
 document.getElementById("progress").textContent=
 kills+"/"+targets[level-1];
+
 }
 
-// ==================================================
+// ============================================
 // MULA GAME
-// ==================================================
+// ============================================
 
 async function startGame(){
-try{
-if(document.documentElement.requestFullscreen)
-await document.documentElement.requestFullscreen();
-
-if(screen.orientation?.lock)
-await screen.orientation.lock("landscape");
-}catch(e){}
 
 initAudio();
+
+try{
+if(document.documentElement.requestFullscreen){
+await document.documentElement.requestFullscreen();
+}
+if(screen.orientation&&screen.orientation.lock){
+await screen.orientation.lock("landscape");
+}
+}catch(e){}
 
 if(window.speechSynthesis)speechSynthesis.cancel();
 
 player={x:100,y:220};
+
 bullets=[];
 enemies=[];
 enemyShots=[];
@@ -468,8 +601,9 @@ bossSpawned=false;
 flying=false;
 
 active=true;
-paused=false;
+paused=true;
 introDone=false;
+stageQuizActive=false;
 
 shootHeld=false;
 joy={x:0,y:0};
@@ -478,12 +612,9 @@ keys={};
 shieldUntil=0;
 hitCount=0;
 lastHit=0;
-gameTime=0;
-lastTime=0;
 
-questionIndex=0;
-quizSequence=[];
-quizAnswered=false;
+gameTime=0;
+lastTime=performance.now();
 
 lastSpawn=performance.now();
 lastItem=performance.now();
@@ -493,30 +624,34 @@ document.getElementById("endScreen").style.display="none";
 document.getElementById("quizScreen").style.display="none";
 
 updateHUD();
+
 stageIntro();
+
 }
 
-// ==================================================
+// ============================================
 // TRANSFORM
-// ==================================================
+// ============================================
 
 function transform(){
+
 if(!active||paused)return;
 
 flying=!flying;
 
-for(let i=0;i<20;i++)
+for(let i=0;i<20;i++){
 burst(player.x+35,player.y+25);
-
-tone(350,.3,"sawtooth",.1,750);
-tone(700,.2,"sine",.05,250);
-
-message(flying?"✈️ MOD KAPAL TERBANG!":"🚗 MOD KERETA!");
 }
 
-// ==================================================
+tone(350,.3,"sawtooth",.08,750);
+
+message(flying?"✈️ MOD KAPAL TERBANG!":"🚗 MOD KERETA!");
+
+}
+
+// ============================================
 // PELURU
-// ==================================================
+// ============================================
 
 const bulletNames=[
 "PELURU BIASA",
@@ -526,72 +661,94 @@ const bulletNames=[
 ];
 
 function changeBullet(type){
+
 bulletType=type;
+
 message("💥 "+bulletNames[type]+"!");
-tone(900,.2,"sine");
+
+sound(900,.2,"sine");
+
 }
 
 function shoot(){
+
 if(!active||paused||Date.now()-lastShot<180)return;
 
 lastShot=Date.now();
 
 if(bulletType===2){
+
 [-.35,0,.35].forEach(a=>{
+
 bullets.push({
 x:player.x+75,
 y:player.y+30,
 vy:a*420,
 type:2
 });
+
 });
+
 }else{
+
 bullets.push({
 x:player.x+75,
 y:player.y+30,
 vy:0,
 type:bulletType
 });
+
 }
 
 shootSound();
+
 }
 
-// ==================================================
-// BOM
-// ==================================================
+// ============================================
+// BOM - LETUPAN LEBIH MANTAP
+// ============================================
 
 function bomb(){
+
 if(!active||paused||bombCount<=0)return;
 
 bombCount--;
 
 explosion(player.x+120,player.y+20);
-bombSound();
 
 enemies.forEach(e=>{
+
 if(Math.abs(e.x-player.x)<470){
+
 e.hp-=5;
+
 if(e.hp<=0)killEnemy(e);
+
 }
+
 });
 
 enemies=enemies.filter(e=>!e.dead);
 
 if(boss){
+
 boss.hp-=5;
+
 if(boss.hp<=0)winGame();
+
 }
 
 enemyShots=[];
+
 updateHUD();
 
-message("💣 BOOOOOOM! MUSUH DISERANG!");
+message("💣 BOOOOOOM!!!");
+
 }
 
-// ==================================================
+// ============================================
 // JOYSTICK
-// ==================================================
+// ============================================
 
 const joyBase=document.getElementById("joystick");
 const stick=document.getElementById("stick");
@@ -599,6 +756,7 @@ const stick=document.getElementById("stick");
 let joyPointer=null;
 
 function joystickMove(e){
+
 const r=joyBase.getBoundingClientRect();
 
 let dx=e.clientX-(r.left+r.width/2);
@@ -617,13 +775,17 @@ joy.y=dy/max;
 
 stick.style.left=(30+joy.x*30)+"%";
 stick.style.top=(30+joy.y*30)+"%";
+
 }
 
 function joystickEnd(){
+
 joy.x=0;
 joy.y=0;
+
 stick.style.left="30%";
 stick.style.top="30%";
+
 }
 
 joyBase.addEventListener("pointerdown",e=>{
@@ -649,9 +811,9 @@ joyPointer=null;
 joystickEnd();
 });
 
-// ==================================================
-// BUTANG
-// ==================================================
+// ============================================
+// BUTANG TEMBAK, BOM DAN TRANSFORM
+// ============================================
 
 const fireBtn=document.getElementById("fire");
 
@@ -680,21 +842,24 @@ e.preventDefault();
 transform();
 });
 
-// ==================================================
+// ============================================
 // KEYBOARD
-// ==================================================
+// ============================================
 
 document.addEventListener("keydown",e=>{
+
 const k=e.key.toLowerCase();
 
-if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k))
+if(["arrowup","arrowdown","arrowleft","arrowright"," "].includes(k)){
 e.preventDefault();
+}
 
 keys[k]=true;
 
 if(k===" ")shoot();
 if(k==="t")transform();
 if(k==="b")bomb();
+
 });
 
 document.addEventListener("keyup",e=>{
@@ -702,6 +867,7 @@ keys[e.key.toLowerCase()]=false;
 });
 
 function getMovement(){
+
 let x=joy.x;
 let y=joy.y;
 
@@ -718,233 +884,168 @@ y/=len;
 }
 
 return{x,y};
+
 }
 
-// ==================================================
+// ============================================
 // LETUPAN DAN PARTIKEL
-// ==================================================
+// ============================================
 
 function burst(x,y){
+
 particles.push({
+
 x,y,
+
 vx:(Math.random()-.5)*7,
 vy:(Math.random()-.5)*7,
+
 life:35,
-color:["#fff000","#ff3c9c","#31ffff","#8aff3c","#b56aff"][Math.floor(Math.random()*5)]
+
+color:[
+"#fff000",
+"#ff3c9c",
+"#31ffff",
+"#8aff3c",
+"#b56aff"
+][Math.floor(Math.random()*5)]
+
 });
+
 }
 
 function explosion(x,y){
-for(let i=0;i<35;i++)burst(x,y);
-noise(.35,.13,650);
-tone(100,.3,"sawtooth",.1,30);
+
+for(let i=0;i<45;i++){
+burst(x,y);
 }
 
-// ==================================================
+explosionSound();
+
+}
+
+// ============================================
 // MUSUH
-// ==================================================
+// ============================================
 
 function spawnEnemy(){
+
 if(enemies.length>=10||boss)return;
 
 const y=40+Math.random()*390;
 
 enemies.push({
+
 x:940+Math.random()*100,
 y,
 baseY:y,
+
 hp:level===5?5:4,
 maxHp:level===5?5:4,
+
 type:Math.floor(Math.random()*3),
+
 dead:false,
 phase:Math.random()*6
+
 });
+
 }
 
 function spawnItem(){
+
 items.push({
+
 x:930,
 y:50+Math.random()*380,
+
 type:Math.floor(Math.random()*5)
+
 });
+
 }
 
 function spawnItemAt(x,y){
+
 items.push({
 x,y,
 type:Math.floor(Math.random()*5)
 });
+
 }
 
 function collision(a,b,d=35){
-return Math.abs(a.x-b.x)<d&&Math.abs(a.y-b.y)<d;
+
+return Math.abs(a.x-b.x)<d&&
+Math.abs(a.y-b.y)<d;
+
 }
 
 function killEnemy(e){
+
 if(e.dead)return;
 
 e.dead=true;
+
 score+=100;
 kills++;
 
 explosion(e.x,e.y);
 
-if(Math.random()<.4)
+if(Math.random()<.4){
 spawnItemAt(e.x,e.y);
-
-updateHUD();
 }
 
-// ==================================================
+updateHUD();
+
+}
+
+// ============================================
 // SISTEM KEROSAKAN
-// ==================================================
+// ============================================
 
 function damage(){
+
 if(!active||paused)return;
+
 if(Date.now()<shieldUntil)return;
+
 if(Date.now()-lastHit<450)return;
 
 lastHit=Date.now();
+
 hitCount++;
 
-hitSound();
+sound(150,.15,"sawtooth");
 
 message("⚠️ SERANGAN! "+hitCount+"/"+HITS_PER_LIFE);
 
 if(hitCount>=HITS_PER_LIFE){
+
 hitCount=0;
 hp--;
 
 shieldUntil=Date.now()+2500;
+
 updateHUD();
-
-paused=true;
-shootHeld=false;
-
-openQuiz();
-}
-}
-
-// ==================================================
-// SISTEM SOALAN - 5 SOALAN UNIK
-// ==================================================
-
-function prepareQuiz(){
-quizSequence=[0,1,2,3,4];
-
-// Susun secara rawak tanpa mengulang soalan.
-for(let i=quizSequence.length-1;i>0;i--){
-const j=Math.floor(Math.random()*(i+1));
-[quizSequence[i],quizSequence[j]]=
-[quizSequence[j],quizSequence[i]];
-}
-
-questionIndex=0;
-}
-
-function openQuiz(){
-prepareQuiz();
-
-document.getElementById("quizScreen").style.display="flex";
-
-showQuestion();
-}
-
-function showQuestion(){
-if(questionIndex>=5){
-finishQuiz();
-return;
-}
-
-const list=questions[level-1];
-
-currentQuestion=list[quizSequence[questionIndex]];
-quizAnswered=false;
-
-document.getElementById("quizStage").textContent="STAGE "+level;
-
-document.getElementById("quizCounter").textContent=
-"SOALAN "+(questionIndex+1)+" / 5";
-
-document.getElementById("quizQuestion").textContent=
-currentQuestion.q;
-
-document.getElementById("quizFeedback").textContent="";
-
-const box=document.getElementById("answers");
-box.innerHTML="";
-
-say(currentQuestion.q);
-
-currentQuestion.a.forEach((answer,i)=>{
-const btn=document.createElement("button");
-
-btn.className="answerBtn";
-btn.textContent=answer;
-
-btn.onclick=()=>checkAnswer(i);
-
-box.appendChild(btn);
-});
-
-}
-
-function checkAnswer(index){
-if(quizAnswered)return;
-
-if(index===currentQuestion.c){
-quizAnswered=true;
-
-sound(950,.3,"sine");
-
-document.getElementById("quizFeedback").textContent=
-"✅ ALHAMDULILLAH! JAWAPAN BETUL!";
-
-document.getElementById("answers").innerHTML="";
-
-say("Alhamdulillah! Jawapan betul. Syabas, pahlawan!");
-
-setTimeout(()=>{
-questionIndex++;
-
-if(questionIndex>=5){
-finishQuiz();
-}else{
-showQuestion();
-}
-},1200);
-
-}else{
-sound(180,.3,"sawtooth");
-
-document.getElementById("quizFeedback").textContent=
-"❌ BELUM TEPAT! CUBA SEKALI LAGI, PAHLAWAN!";
-
-say("Belum tepat. Cuba sekali lagi.");
-
-}
-}
-
-function finishQuiz(){
-document.getElementById("quizScreen").style.display="none";
 
 if(hp<=0){
 gameOver();
 return;
 }
 
-shieldUntil=Date.now()+3000;
-paused=false;
-lastHit=Date.now();
+message("❤️ NYAWA BERKURANG! BERHATI-HATI!");
 
-message("💪 SEMUA 5 SOALAN SELESAI! TERUSKAN PERJUANGAN!");
 }
 
-// ==================================================
+}
+
+// ============================================
 // GAME OVER
-// ==================================================
+// ============================================
 
 function gameOver(){
+
 if(!active)return;
 
 active=false;
@@ -966,19 +1067,22 @@ document.getElementById("endText").textContent=
 "Nyawa telah habis. Skor akhir: "+score+
 ". Cuba lagi dari STAGE 1!";
 
-sound(100,.7,"sawtooth");
-say("Game over! Cuba lagi.");
+explosionSound();
+
+say("Game over! Jangan berputus asa. Cuba lagi!");
+
 }
 
-// ==================================================
+// ============================================
 // STAGE SETERUSNYA
-// UCAPAN INTRO TIDAK DIULANG
-// ==================================================
+// ============================================
 
 function nextLevel(){
+
 if(level>=5)return;
 
 level++;
+
 kills=0;
 
 enemies=[];
@@ -996,45 +1100,47 @@ paused=true;
 
 message("🏆 TAHNIAH! STAGE "+level+"!");
 
-tone(700,.3,"sine");
-tone(950,.35,"sine");
+say(
+"Tahniah! Anda berjaya melepasi stage sebelumnya. Sekarang cabaran stage "+level+" bermula. Sasaran anda ialah "+targets[level-1]+" musuh. Teruskan perjuangan!"
+).then(()=>{
 
-setTimeout(()=>{
 if(!active)return;
 
-paused=false;
-lastSpawn=performance.now();
+stageIntro();
 
-message(
-"⚔️ STAGE "+level+" BERMULA! SASARAN "+targets[level-1]+" MUSUH!"
-);
-},1800);
+});
+
 }
 
-// ==================================================
+// ============================================
 // BOSS TERAKHIR
-// ==================================================
+// ============================================
 
 function spawnBoss(){
+
 bossSpawned=true;
+
 enemies=[];
 enemyShots=[];
 
 boss={
+
 x:730,
 y:170,
+
 hp:100,
 maxHp:100
+
 };
 
 message("⚠️ BOSS TERAKHIR MUNCUL!");
 
-say("Amaran! Boss terakhir telah muncul! Bersiap sedia, pahlawan!");
+say("Amaran! Boss terakhir telah muncul! Bersiap sedia, pahlawan! Kalahkan boss untuk menjadi juara!");
 
-tone(100,.6,"sawtooth",.2,35);
 }
 
 function winGame(){
+
 if(!active)return;
 
 active=false;
@@ -1042,9 +1148,13 @@ paused=false;
 shootHeld=false;
 
 if(boss){
+
 explosion(boss.x,boss.y);
+
 score+=2000;
+
 boss=null;
+
 }
 
 document.getElementById("endScreen").style.display="flex";
@@ -1052,17 +1162,21 @@ document.getElementById("endScreen").style.display="flex";
 document.getElementById("endTitle").textContent="🏆 ANDA JUARA!";
 
 document.getElementById("endText").textContent=
-"Alhamdulillah! Semua lima stage berjaya diselesaikan! Anda telah menewaskan 1,050 musuh dan menewaskan Boss terakhir! Skor akhir: "+score;
+"Alhamdulillah! Semua lima stage berjaya diselesaikan! Anda telah menewaskan 1,050 musuh termasuk boss terakhir! Skor akhir: "+score;
 
-tone(1000,.7,"sine");
-say("Tahniah! Anda juara! Semua peringkat berjaya diselesaikan!");
+tone(1000,.5,"sine",.1,1500);
+tone(700,.7,"sine",.08,1200);
+
+say("Tahniah! Anda juara! Semua lima peringkat berjaya diselesaikan! Alhamdulillah!");
+
 }
 
-// ==================================================
+// ============================================
 // LATAR BELAKANG
-// ==================================================
+// ============================================
 
 function background(){
+
 const g=ctx.createLinearGradient(0,0,0,500);
 
 g.addColorStop(0,"#21caff");
@@ -1073,6 +1187,7 @@ ctx.fillStyle=g;
 ctx.fillRect(0,0,W,H);
 
 ctx.fillStyle="#fff34b";
+
 ctx.beginPath();
 ctx.arc(770,75,43,0,Math.PI*2);
 ctx.fill();
@@ -1080,6 +1195,7 @@ ctx.fill();
 ctx.fillStyle="#a18ae1";
 
 ctx.beginPath();
+
 ctx.moveTo(0,330);
 ctx.lineTo(170,125);
 ctx.lineTo(340,340);
@@ -1088,13 +1204,18 @@ ctx.lineTo(720,345);
 ctx.lineTo(900,190);
 ctx.lineTo(900,420);
 ctx.lineTo(0,420);
+
 ctx.fill();
 
 for(let i=0;i<10;i++){
+
 const x=i*100;
 const h=65+(i*37)%100;
 
-ctx.fillStyle=["#ff77b7","#ffca52","#67caff","#8f72df"][i%4];
+ctx.fillStyle=[
+"#ff77b7","#ffca52","#67caff","#8f72df"
+][i%4];
+
 ctx.fillRect(x,420-h,72,h);
 
 ctx.fillStyle="#fff5a2";
@@ -1104,6 +1225,7 @@ for(let z=x+12;z<x+65;z+=23){
 ctx.fillRect(z,y,10,12);
 }
 }
+
 }
 
 ctx.fillStyle="#515d85";
@@ -1111,34 +1233,42 @@ ctx.fillRect(0,440,900,60);
 
 ctx.fillStyle="white";
 
-for(let x=0;x<900;x+=100)
+for(let x=0;x<900;x+=100){
 ctx.fillRect(x,468,45,6);
+}
 
 for(let i=0;i<4;i++){
+
 const x=(i*245+60+gameTime*30)%1000-60;
 const y=75+i%2*65;
 
 ctx.fillStyle="white";
 
 ctx.beginPath();
+
 ctx.arc(x,y,23,0,Math.PI*2);
 ctx.arc(x+27,y-10,30,0,Math.PI*2);
 ctx.arc(x+58,y,24,0,Math.PI*2);
+
 ctx.fill();
-}
+
 }
 
-// ==================================================
-// HERO TRANSFORMER
-// ==================================================
+}
+
+// ============================================
+// HERO
+// ============================================
 
 function drawPlayer(){
+
 ctx.save();
 
 const x=player.x;
 const y=player.y;
 
 if(Date.now()<shieldUntil){
+
 ctx.strokeStyle="#fff36a";
 ctx.lineWidth=5;
 ctx.shadowBlur=20;
@@ -1147,6 +1277,7 @@ ctx.shadowColor="#fff36a";
 ctx.beginPath();
 ctx.arc(x+48,y+30,58,0,Math.PI*2);
 ctx.stroke();
+
 }
 
 ctx.shadowBlur=15;
@@ -1157,11 +1288,13 @@ if(flying){
 ctx.fillStyle="#ffb52b";
 
 ctx.beginPath();
+
 ctx.moveTo(x+105,y+30);
 ctx.lineTo(x+15,y);
 ctx.lineTo(x+34,y+27);
 ctx.lineTo(x+5,y+55);
 ctx.lineTo(x+45,y+48);
+
 ctx.closePath();
 ctx.fill();
 
@@ -1174,6 +1307,7 @@ ctx.fillRect(x+12,y+12,15,10);
 }else{
 
 const grad=ctx.createLinearGradient(x,y,x,y+60);
+
 grad.addColorStop(0,"#ff9ed0");
 grad.addColorStop(.45,"#ff287b");
 grad.addColorStop(1,"#9d145b");
@@ -1181,22 +1315,26 @@ grad.addColorStop(1,"#9d145b");
 ctx.fillStyle=grad;
 
 ctx.beginPath();
+
 ctx.moveTo(x+5,y+30);
 ctx.lineTo(x+20,y+12);
 ctx.lineTo(x+68,y+12);
 ctx.lineTo(x+88,y+29);
 ctx.lineTo(x+96,y+48);
 ctx.lineTo(x,y+48);
+
 ctx.closePath();
 ctx.fill();
 
 ctx.fillStyle="#9df5ff";
 
 ctx.beginPath();
+
 ctx.moveTo(x+27,y+15);
 ctx.lineTo(x+63,y+15);
 ctx.lineTo(x+78,y+29);
 ctx.lineTo(x+18,y+29);
+
 ctx.closePath();
 ctx.fill();
 
@@ -1206,15 +1344,19 @@ ctx.fillRect(x+86,y+32,10,8);
 ctx.fillStyle="#222333";
 
 ctx.beginPath();
+
 ctx.arc(x+23,y+48,12,0,Math.PI*2);
 ctx.arc(x+76,y+48,12,0,Math.PI*2);
+
 ctx.fill();
 
 ctx.fillStyle="#b6faff";
 
 ctx.beginPath();
+
 ctx.arc(x+23,y+48,5,0,Math.PI*2);
 ctx.arc(x+76,y+48,5,0,Math.PI*2);
+
 ctx.fill();
 
 ctx.strokeStyle="#fff36a";
@@ -1223,34 +1365,45 @@ ctx.lineWidth=3;
 ctx.beginPath();
 ctx.arc(x+48,y+22,13,Math.PI,0);
 ctx.stroke();
+
 }
 
 ctx.restore();
+
 }
 
-// ==================================================
+// ============================================
 // LUKIS OBJEK
-// ==================================================
+// ============================================
 
 function draw(){
+
 background();
+
 drawPlayer();
 
 bullets.forEach(b=>{
+
 ctx.save();
 
 ctx.shadowBlur=15;
-ctx.shadowColor=b.type===1?"orange":b.type===3?"cyan":"yellow";
 
-ctx.fillStyle=b.type===1?"#ff5a00":
+ctx.shadowColor=
+b.type===1?"orange":
+b.type===3?"cyan":"yellow";
+
+ctx.fillStyle=
+b.type===1?"#ff5a00":
 b.type===3?"#00ffff":"#fff400";
 
 ctx.fillRect(b.x,b.y-4,b.type===3?40:20,8);
 
 ctx.restore();
+
 });
 
 enemies.forEach(e=>{
+
 const colors=["#ff553c","#8755e9","#33bb70"];
 
 ctx.fillStyle=colors[e.type];
@@ -1277,20 +1430,33 @@ ctx.fillStyle="red";
 ctx.fillRect(e.x,e.y-10,70,6);
 
 ctx.fillStyle="#53f65d";
-ctx.fillRect(e.x,e.y-10,70*Math.max(0,e.hp/e.maxHp),6);
+ctx.fillRect(
+e.x,e.y-10,
+70*Math.max(0,e.hp/e.maxHp),6
+);
+
 });
 
 items.forEach(t=>{
+
 ctx.font="35px Arial";
-ctx.fillText(["🔥","💥","⚡","❤️","💣"][t.type],t.x,t.y);
+
+ctx.fillText(
+["🔥","💥","⚡","❤️","💣"][t.type],
+t.x,t.y
+);
+
 });
 
 enemyShots.forEach(b=>{
+
 ctx.font="23px Arial";
 ctx.fillText("🔥",b.x,b.y);
+
 });
 
 if(boss){
+
 ctx.fillStyle="#7924bd";
 
 ctx.beginPath();
@@ -1308,14 +1474,21 @@ ctx.fillStyle="#e92743";
 ctx.fillRect(boss.x,boss.y-18,140,10);
 
 ctx.fillStyle="#4bfa65";
-ctx.fillRect(boss.x,boss.y-18,140*boss.hp/boss.maxHp,10);
+
+ctx.fillRect(
+boss.x,boss.y-18,
+140*Math.max(0,boss.hp/boss.maxHp),10
+);
 
 ctx.fillStyle="white";
 ctx.font="bold 17px Arial";
+
 ctx.fillText("BOSS",boss.x+45,boss.y-24);
+
 }
 
 particles.forEach(p=>{
+
 ctx.globalAlpha=Math.max(0,p.life/35);
 
 ctx.fillStyle=p.color;
@@ -1325,6 +1498,7 @@ ctx.arc(p.x,p.y,4,0,Math.PI*2);
 ctx.fill();
 
 ctx.globalAlpha=1;
+
 });
 
 ctx.fillStyle="white";
@@ -1332,19 +1506,24 @@ ctx.font="bold 15px Arial";
 
 ctx.fillText("PELURU: "+bulletNames[bulletType],15,25);
 
-ctx.fillText("MUSUH: "+kills+"/"+targets[level-1],15,48);
+ctx.fillText(
+"MUSUH: "+kills+"/"+targets[level-1],
+15,48
+);
 
 ctx.fillText(
 "SERANGAN DITERIMA: "+hitCount+"/"+HITS_PER_LIFE,
 15,70
 );
+
 }
 
-// ==================================================
+// ============================================
 // UPDATE GAME
-// ==================================================
+// ============================================
 
 function update(dt){
+
 if(!active||paused)return;
 
 gameTime+=dt;
@@ -1361,114 +1540,171 @@ if(shootHeld)shoot();
 
 const diff=stages[level-1];
 
-// Gerakan musuh
+// GERAKAN MUSUH
+
 enemies.forEach(e=>{
+
 e.x-=diff.speed*dt;
+
 e.y=e.baseY+Math.sin(gameTime*2+e.phase)*12;
 
 if(Math.random()<diff.fire*dt){
+
 enemyShots.push({
 x:e.x,
 y:e.y+35,
 used:false
 });
+
 }
+
 });
 
-// Peluru hero
+// PELURU HERO
+
 bullets.forEach(b=>{
+
 b.x+=650*dt;
 b.y+=(b.vy||0)*dt;
+
 });
 
-// Peluru kena musuh
+// PELURU KENA MUSUH
+
 bullets.forEach(b=>{
+
 enemies.forEach(e=>{
+
 if(!b.used&&!e.dead&&collision(
 b,{x:e.x+35,y:e.y+35},43
 )){
+
 b.used=true;
 
-e.hp-=b.type===1?2:b.type===3?3:1;
+e.hp-=
+b.type===1?2:
+b.type===3?3:1;
 
 if(e.hp<=0)killEnemy(e);
+
 }
+
 });
+
 });
 
 bullets=bullets.filter(b=>b.x<950&&!b.used);
+
 enemies=enemies.filter(e=>!e.dead&&e.x>-100);
 
-// Boss hanya selepas 400 musuh
-if(level===5&&kills>=targets[4]&&!boss&&!bossSpawned){
+// BOSS SELEPAS 400 MUSUH
+
+if(level===5&&kills>=400&&!boss&&!bossSpawned){
 spawnBoss();
 }
 
 if(boss){
+
 boss.x=Math.max(680,boss.x-8*dt);
 boss.y=160+Math.sin(gameTime*2)*25;
 
 if(Math.random()<.8*dt){
+
 enemyShots.push({
 x:boss.x,
 y:boss.y+65,
 used:false
 });
+
 }
 
 bullets.forEach(b=>{
+
 if(!b.used&&collision(
 b,{x:boss.x+65,y:boss.y+60},85
 )){
+
 b.used=true;
-boss.hp-=b.type===3?3:b.type===1?2:1;
 
-if(boss.hp<=0)winGame();
+boss.hp-=
+b.type===3?3:
+b.type===1?2:1;
+
+if(boss.hp<=0){
+winGame();
 }
+
+}
+
 });
+
 }
 
-// Serangan musuh
+// SERANGAN MUSUH
+
 enemyShots.forEach(b=>{
+
 b.x-=260*dt;
 
 if(!b.used&&collision(
 b,{x:player.x+45,y:player.y+30},35
 )){
+
 b.used=true;
+
 damage();
+
 }
+
 });
 
 enemyShots=enemyShots.filter(b=>b.x>0&&!b.used);
 
-// Perlanggaran badan
+// PERLANGGARAN BADAN
+
 enemies.forEach(e=>{
+
 if(!e.dead&&collision(
 {x:player.x+50,y:player.y+30},
 {x:e.x+35,y:e.y+35},55
 )){
+
 damage();
+
 e.x+=70;
+
 }
+
 });
 
-// Bonus
-items.forEach(t=>t.x-=100*dt);
+// BONUS
+
+items.forEach(t=>{
+t.x-=100*dt;
+});
 
 items=items.filter(t=>{
+
 if(collision(t,{x:player.x+45,y:player.y+30},43)){
 
-if(t.type<=2)changeBullet(t.type+1);
+if(t.type<=2){
+changeBullet(t.type+1);
+}
 
 if(t.type===3){
+
 hp=Math.min(MAX_HP,hp+1);
+
 message("❤️ NYAWA BERTAMBAH!");
+
 }
 
 if(t.type===4){
+
 bombCount=Math.min(5,bombCount+1);
+
 message("💣 BOM BERTAMBAH!");
+
 }
 
 gems++;
@@ -1476,70 +1712,95 @@ score+=50;
 
 sound(1100,.12,"sine");
 
-for(let i=0;i<12;i++)burst(t.x,t.y);
+for(let i=0;i<12;i++){
+burst(t.x,t.y);
+}
 
 updateHUD();
 
 return false;
+
 }
 
 return t.x>-50;
+
 });
 
-// Partikel
+// PARTIKEL
+
 particles.forEach(p=>{
+
 p.x+=p.vx;
 p.y+=p.vy;
+
 p.life-=60*dt;
+
 });
 
 particles=particles.filter(p=>p.life>0);
 
-// Kemajuan stage
+// KEMAJUAN STAGE
+
 if(level<5&&kills>=targets[level-1]&&!paused){
+
 nextLevel();
+
 }
 
 updateHUD();
+
 }
 
-// ==================================================
+// ============================================
 // GAME LOOP
-// ==================================================
+// ============================================
 
 function loop(now){
+
 let dt=Math.min((now-lastTime)/1000||0,.04);
 
 lastTime=now;
 
-if(active&&!paused){
+if(active&&!paused&&!stageQuizActive){
 
 const diff=stages[level-1];
 
 if(now-lastSpawn>diff.interval){
+
 spawnEnemy();
+
 lastSpawn=now;
+
 }
 
 if(now-lastItem>5000){
+
 spawnItem();
+
 lastItem=now;
+
 }
+
 }
 
 update(dt);
+
 draw();
 
 requestAnimationFrame(loop);
+
 }
 
-// ==================================================
-// MULA PERMAINAN
-// ==================================================
+// ============================================
+// BUTANG MULA
+// ============================================
 
-document.getElementById("startButton").addEventListener("click",startGame);
+document.getElementById("startButton").addEventListener(
+"click",startGame
+);
 
 updateHUD();
+
 requestAnimationFrame(loop);
 
 </script>
